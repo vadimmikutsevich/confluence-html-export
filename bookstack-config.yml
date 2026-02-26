@@ -1,0 +1,87 @@
+books:
+  - name: "Platform FAQ"
+    pages:
+      - name: "Платформа FAQ"
+        link: "https://book.gambchamp.com/books/platform-faq/page/platforma-faq"
+  - name: "Game Management"
+    pages:
+      - name: "Создание и редактирование игры"
+        link: "https://book.gambchamp.com/books/game-management/page/sozdanie-i-redaktirovanie-igry"
+  - name: "Jackpots"
+    pages:
+      - name: "Создание и редактирование джекпот-кампании"
+        link: "https://book.gambchamp.com/books/jackpots/page/sozdanie-i-redaktirovanie-dzekpot-kampanii"
+      - name: "Раздел «Jackpot Campaign List»"
+        link: "https://book.gambchamp.com/books/jackpots/page/razdel-jackpot-campaign-list"
+      - name: "Джекпоты"
+        link: "https://book.gambchamp.com/books/jackpots/page/dzekpoty"
+  - name: "GEO Management"
+    pages:
+      - name: "Управление ГЕО"
+        link: "https://book.gambchamp.com/books/geo-management/page/upravlenie-geo"
+      - name: "Управление ГЕО. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/geo-management/page/upravlenie-geo-administrativnyi-interfeis"
+  - name: "Bonuses and Promo"
+    pages:
+      - name: "Шаблоны бонус-батчей. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/sablony-bonus-batcei-administrativnyi-interfeis"
+      - name: "Создание и редактирование инфокарточки"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/sozdanie-i-redaktirovanie-infokartocki"
+  - name: "Notifications"
+    pages:
+      - name: "Шаблоны писем"
+        link: "https://book.gambchamp.com/books/notifications/page/sablony-pisem"
+      - name: "Список JSON-переменных в шаблонах писем"
+        link: "https://book.gambchamp.com/books/notifications/page/spisok-json-peremennyx-v-sablonax-pisem"
+  - name: "Admin Management"
+    pages:
+      - name: "Управление администраторами"
+        link: "https://book.gambchamp.com/books/admin-management/page/upravlenie-administratorami"
+      - name: "Создание и редактирование администратора"
+        link: "https://book.gambchamp.com/books/admin-management/page/sozdanie-i-redaktirovanie-administratora"
+      - name: "Права администраторов"
+        link: "https://book.gambchamp.com/books/admin-management/page/prava-administratorov"
+  - name: "Payment Systems"
+    pages:
+      - name: "Транзакции"
+        link: "https://book.gambchamp.com/books/payment-systems/page/tranzakcii"
+      - name: "Транзакции. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/payment-systems/page/tranzakcii-administrativnyi-interfeis"
+      - name: "Депозитный вейджер. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/payment-systems/page/depozitnyi-veidzer-administrativnyi-interfeis"
+      - name: "Быстрый депозит. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/payment-systems/page/bystryi-depozit-administrativnyi-interfeis"
+      - name: "Быстрый депозит"
+        link: "https://book.gambchamp.com/books/payment-systems/page/bystryi-depozit"
+      - name: "Создание и редактирование правила депозитного вейджера"
+        link: "https://book.gambchamp.com/books/payment-systems/page/sozdanie-i-redaktirovanie-pravila-depozitnogo-veidzera"
+      - name: "Депозитный вейджер"
+        link: "https://book.gambchamp.com/books/payment-systems/page/depozitnyi-veidzer"
+  - name: "Smartico"
+    pages:
+      - name: "Настройка вебхуков в BackOffice Smartico"
+        link: "https://book.gambchamp.com/books/smartico/page/nastroika-vebxukov-v-backoffice-smartico"
+  - name: "Content Management
+    pages:
+      - name: "Настройки центра помощи. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/content-management/page/nastroiki-centra-pomoshhi-administrativnyi-interfeis"
+      - name: "Главный экран. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/content-management/page/glavnyi-ekran-administrativnyi-interfeis"
+  - name: "Analytics"
+    pages:
+      - name: "Отчеты PowerBI. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/analytics/page/otcety-powerbi-administrativnyi-interfeis"
+  - name: "Amplitude"
+    pages:
+      - name: "События для Amplitude"
+        link: "https://book.gambchamp.com/books/amplitude/page/sobytiia-dlia-amplitude"
+  - name: "Balances"
+    pages:
+      - name: "Балансы"
+        link: "https://book.gambchamp.com/books/balances/page/balansy"
+  - name: "Interface Overview"
+    pages:
+      - name: "Профиль игрока. Данные профиля"
+        link: "https://book.gambchamp.com/books/interface-overview/page/profil-igroka-dannye-profilia"
+      - name: "Административный интерфейс QQBet"
+        link: "https://book.gambchamp.com/books/interface-overview/page/administrativnyi-interfeis-qqbet"
