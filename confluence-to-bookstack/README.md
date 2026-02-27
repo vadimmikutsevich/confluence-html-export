@@ -69,6 +69,20 @@ npm run c2b -- ^
   --max-depth 1
 ```
 
+**Синхронизация с BookStack** (экспорт + обновление страниц по конфигу + замена ссылок):
+
+```bash
+npm run c2b -- ^
+  --page "https://gambchamp.atlassian.net/wiki/spaces/BP/pages/197230594/-+." ^
+  --recursive ^
+  --max-depth 10 ^
+  --no-inline-images ^
+  --sync-bookstack ^
+  --config bookstack-config.yml
+```
+
+Требуется `bookstack-config.yml` с картой `page name -> link`. Страницы из Confluence сопоставляются по заголовку; ссылки на другие Confluence-страницы заменяются на BookStack-ссылки из конфига.
+
 ## Параметры
 
 - `--page`: URL Confluence или pageId.
@@ -83,4 +97,6 @@ npm run c2b -- ^
 - `--concurrency`: параллельные скачивания картинок (по умолчанию 4).
 - `--max-bytes`: лимит размера одной картинки (по умолчанию 15MB).
 - `--keep-ids`: не удалять `id` атрибуты при чистке HTML.
+- `--config`: путь к `bookstack-config.yml` (карта page name → link).
+- `--sync-bookstack`: экспорт + обновление страниц в BookStack по конфигу, замена ссылок Confluence → BookStack.
 

@@ -61,7 +61,7 @@ books:
     pages:
       - name: "Настройка вебхуков в BackOffice Smartico"
         link: "https://book.gambchamp.com/books/smartico/page/nastroika-vebxukov-v-backoffice-smartico"
-  - name: "Content Management
+  - name: "Content Management"
     pages:
       - name: "Настройки центра помощи. Административный интерфейс"
         link: "https://book.gambchamp.com/books/content-management/page/nastroiki-centra-pomoshhi-administrativnyi-interfeis"

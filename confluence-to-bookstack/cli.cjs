@@ -5,23 +5,23 @@
 // This keeps secrets out of the repository while enabling convenient local runs.
 require("dotenv").config({ quiet: true });
 
-// Prefer IPv4 first on Windows networks where IPv6 may be flaky.
-// This helps avoid sporadic UND_ERR_CONNECT_TIMEOUT in Node's fetch (undici).
+// DNS: verbatim = system order. Use for VPN/internal hosts (book.gambchamp.com).
+// ipv4first can break resolution for internal hosts.
 try {
   const dns = require("node:dns");
   if (typeof dns.setDefaultResultOrder === "function") {
-    dns.setDefaultResultOrder("ipv4first");
+    dns.setDefaultResultOrder("verbatim");
   }
 } catch {
   // ignore
 }
 
-// Also hint undici to use IPv4 if possible.
+// Undici: family 0 = auto (IPv4+IPv6). For internal hosts via VPN.
 try {
   const { Agent, setGlobalDispatcher } = require("undici");
   setGlobalDispatcher(
     new Agent({
-      connect: { family: 4 },
+      connect: { family: 0 },
       connectTimeout: 30_000,
       headersTimeout: 30_000,
       bodyTimeout: 120_000,
@@ -35,6 +35,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { Command } = require("commander");
 const cheerio = require("cheerio");
+const yaml = require("js-yaml");
 const pLimitImport = require("p-limit");
 const pLimit =
   typeof pLimitImport === "function" ? pLimitImport : pLimitImport.default;
@@ -223,6 +224,156 @@ async function fetchBinary(url, opts = {}) {
 
 function bookstackAuthHeader(tokenId, tokenSecret) {
   return `Token ${tokenId}:${tokenSecret}`;
+}
+
+/**
+ * Load bookstack-config.yml and return Map<pageName, link>.
+ * Page names are trimmed; links are full URLs like https://book.example.com/books/foo/page/bar
+ */
+function loadBookstackConfig(configPath) {
+  const raw = fs.readFileSync(configPath, "utf8");
+  const data = yaml.load(raw);
+  const map = new Map();
+  if (!data || !Array.isArray(data.books)) return map;
+  for (const book of data.books) {
+    const pages = book.pages;
+    if (!Array.isArray(pages)) continue;
+    for (const p of pages) {
+      const name = String(p.name || "").trim();
+      const link = String(p.link || "").trim();
+      if (name && link) map.set(name, link);
+    }
+  }
+  return map;
+}
+
+/**
+ * Parse BookStack page URL to extract book_slug and page_slug.
+ * URL format: https://host/books/{book_slug}/page/{page_slug}
+ */
+function parseBookstackPageUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    const m = u.pathname.match(/\/books\/([^/]+)\/page\/([^/]+)/);
+    return m ? { bookSlug: m[1], pageSlug: m[2] } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve BookStack page ID from full page URL by fetching pages list.
+ * BookStack API uses offset/count pagination (no next URL).
+ */
+async function resolveBookstackPageIdFromUrl({
+  bookstackBase,
+  bsAuthHeader,
+  pageUrl,
+  log = () => {},
+}) {
+  const parsed = parseBookstackPageUrl(pageUrl);
+  if (!parsed) {
+    log(`[bs] parseBookstackPageUrl failed for: ${pageUrl}`);
+    return null;
+  }
+  log(`[bs] Ищем страницу: book_slug=${parsed.bookSlug} page_slug=${parsed.pageSlug}`);
+
+  const count = 100;
+  let offset = 0;
+  const maxPages = 100;
+
+  for (let i = 0; i < maxPages; i += 1) {
+    const url = `${bookstackBase}/api/pages?count=${count}&offset=${offset}`;
+    log(`[bs] GET ${url}`);
+    const list = await fetchJson(url, {
+      headers: { Authorization: bsAuthHeader, Accept: "application/json" },
+    });
+    const items = Array.isArray(list.data)
+      ? list.data
+      : Array.isArray(list.results)
+        ? list.results
+        : [];
+    const total = list.total != null ? list.total : items.length;
+    log(`[bs] Получено ${items.length} страниц (total=${total}, offset=${offset})`);
+    if (items.length > 0 && offset === 0) {
+      const sample = items[0];
+      log(
+        `[bs] Пример первой страницы: id=${sample.id} slug=${sample.slug} book_slug=${sample.book_slug} name="${sample.name}"`
+      );
+    }
+
+    for (const p of items) {
+      const match =
+        String(p.book_slug || "") === parsed.bookSlug &&
+        String(p.slug || "") === parsed.pageSlug;
+      if (match) {
+        log(`[bs] Найдено: id=${p.id} name="${p.name}"`);
+        return p.id;
+      }
+    }
+
+    offset += items.length;
+    if (items.length < count || offset >= total) break;
+  }
+  log(`[bs] Страница не найдена после просмотра ${offset} записей`);
+  return null;
+}
+
+/**
+ * Rewrite Confluence links in HTML to BookStack links from config.
+ * Uses titleById (confluenceId -> title) and configByName (title -> link).
+ */
+function rewriteConfluenceLinksToBookstack($, {
+  titleById,
+  configByName,
+  confluenceBase,
+}) {
+  const base = confluenceBase;
+  $("a[href]").each((_, a) => {
+    const href = String($(a).attr("href") || "").trim();
+    if (!href || href.startsWith("#")) return;
+
+    const linkedId = extractConfluencePageIdFromHref(href, base);
+    if (!linkedId) return;
+
+    const title = titleById.get(linkedId);
+    if (!title) return;
+
+    const link = configByName.get(title);
+    if (!link) return;
+
+    try {
+      const abs = absolutizeMaybe(href, base);
+      const u = new URL(abs);
+      const hash = u.hash || "";
+      $(a).attr("href", link + hash);
+    } catch {
+      $(a).attr("href", link);
+    }
+  });
+}
+
+async function updateBookstackPage({
+  bookstackBase,
+  bsAuthHeader,
+  pageId,
+  html,
+  name,
+  log = () => {},
+}) {
+  const url = `${bookstackBase}/api/pages/${pageId}`;
+  log(`[bs] PUT ${url} (name="${name}", htmlLen=${html ? html.length : 0})`);
+  const res = await fetchJson(url, {
+    method: "PUT",
+    headers: {
+      Authorization: bsAuthHeader,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ html, name }),
+  });
+  log(`[bs] PUT ответ: id=${res.id} name="${res.name}"`);
+  return res;
 }
 
 async function findOrCreateBook({ bookstackBase, bsAuthHeader, desiredName }) {
@@ -729,6 +880,14 @@ async function main() {
       "--no-fragment",
       "Сохранять полный HTML (иначе сохраняется только фрагмент body)"
     )
+    .option(
+      "--config <path>",
+      "Путь к bookstack-config.yml (карта page name -> link для синхронизации)"
+    )
+    .option(
+      "--sync-bookstack",
+      "Экспорт + обновление страниц в BookStack по конфигу (замена ссылок Confluence на BookStack)"
+    )
     .parse(process.argv);
 
   const opts = program.opts();
@@ -878,8 +1037,9 @@ async function main() {
     return path.join(outDir, `${safe}__${id}.fragment.html`);
   };
 
-  // Export (with optional recursion) for dry-run scenarios.
-  if (opts.dryRun) {
+  // Export (with optional recursion) when dry-run or sync-bookstack.
+  let exported = [];
+  if (opts.dryRun || opts.syncBookstack) {
     const visited = new Set();
     const queue = [{ id: String(pageId), depth: 0, pageUrlForThis: pageUrl }];
 
@@ -892,6 +1052,8 @@ async function main() {
 
       console.log(`[info] Export pageId=${id} depth=${depth}`);
       const res = await renderCleanFragment({ id, pageUrlForThis });
+      exported.push(res);
+
       const outPath = makeOutPath({
         title: res.title,
         id: res.id,
@@ -908,7 +1070,123 @@ async function main() {
         }
       }
     }
+  }
 
+  // Sync to BookStack: rewrite links and update pages per config.
+  if (opts.syncBookstack) {
+    const log = (msg) => {
+      console.log(msg);
+    };
+
+    const configPath =
+      opts.config ||
+      path.resolve(process.cwd(), "bookstack-config.yml");
+    if (!fs.existsSync(configPath)) {
+      throw new Error(
+        `Конфиг не найден: ${configPath}. Укажите --config <path> или положите bookstack-config.yml в корень проекта.`
+      );
+    }
+    const configByName = loadBookstackConfig(configPath);
+    log(`[sync] Загружен конфиг: ${configPath} (${configByName.size} страниц)`);
+    let idx = 0;
+    for (const [name, link] of configByName) {
+      if (idx++ < 5) log(`[sync]   конфиг: "${name}" -> ${link}`);
+    }
+    if (configByName.size > 5) log(`[sync]   ... и ещё ${configByName.size - 5} записей`);
+
+    let bookstackBase = String(
+      opts.bookstackBase || process.env.BOOKSTACK_BASE || ""
+    ).replace(/\/+$/, "");
+    if (!bookstackBase && configByName.size > 0) {
+      const firstLink = configByName.values().next().value;
+      if (firstLink) {
+        try {
+          bookstackBase = new URL(firstLink).origin;
+          log(`[sync] BookStack base взят из конфига: ${bookstackBase}`);
+        } catch {
+          // ignore
+        }
+      }
+    }
+    requireNonEmpty(
+      bookstackBase,
+      "Для --sync-bookstack нужен --bookstack-base (или env BOOKSTACK_BASE), либо ссылки в конфиге"
+    );
+    log(`[sync] BookStack base: ${bookstackBase}`);
+
+    const bsTokenId = opts.bookstackTokenId || process.env.BOOKSTACK_TOKEN_ID;
+    const bsTokenSecret =
+      opts.bookstackTokenSecret || process.env.BOOKSTACK_TOKEN_SECRET;
+    requireNonEmpty(
+      bsTokenId,
+      "Для --sync-bookstack нужен --bookstack-token-id или env BOOKSTACK_TOKEN_ID"
+    );
+    requireNonEmpty(
+      bsTokenSecret,
+      "Для --sync-bookstack нужен --bookstack-token-secret или env BOOKSTACK_TOKEN_SECRET"
+    );
+    const bsAuthHeader = bookstackAuthHeader(bsTokenId, bsTokenSecret);
+
+    const titleById = new Map();
+    for (const r of exported) titleById.set(r.id, r.title);
+    log(`[sync] Экспортировано страниц: ${exported.length}`);
+
+    let updated = 0;
+    let skipped = 0;
+    for (const res of exported) {
+      log(`[sync] --- Обработка: "${res.title}" (id=${res.id}) ---`);
+      const link = configByName.get(res.title);
+      if (!link) {
+        log(`[skip] Нет в конфиге: "${res.title}"`);
+        skipped += 1;
+        continue;
+      }
+      log(`[sync] Есть в конфиге, link=${link}`);
+
+      const pageIdBs = await resolveBookstackPageIdFromUrl({
+        bookstackBase,
+        bsAuthHeader,
+        pageUrl: link,
+        log,
+      });
+      if (!pageIdBs) {
+        log(`[warn] Не найден page в BookStack: ${link}`);
+        skipped += 1;
+        continue;
+      }
+      log(`[sync] BookStack page_id=${pageIdBs}, переписываем ссылки...`);
+
+      const $ = cheerio.load(res.html, { decodeEntities: false });
+      rewriteConfluenceLinksToBookstack($, {
+        titleById,
+        configByName,
+        confluenceBase: confluenceBaseNormalized,
+      });
+      const html =
+        $("body").length
+          ? $("body").html()
+          : $("#__root").length
+            ? $("#__root").html()
+            : $.root().html();
+      const htmlToSend = html || res.html;
+      log(`[sync] Отправка HTML (${htmlToSend.length} символов)...`);
+
+      await updateBookstackPage({
+        bookstackBase,
+        bsAuthHeader,
+        pageId: pageIdBs,
+        html: htmlToSend,
+        name: res.title,
+        log,
+      });
+      log(`[ok] Обновлена страница: "${res.title}" -> ${link}`);
+      updated += 1;
+    }
+    log(`[sync] Итого: обновлено ${updated}, пропущено ${skipped}`);
+    return;
+  }
+
+  if (opts.dryRun) {
     console.log("[info] Dry-run: skip BookStack create");
     return;
   }
