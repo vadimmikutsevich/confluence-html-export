@@ -85,3 +85,13 @@ books:
         link: "https://book.gambchamp.com/books/interface-overview/page/profil-igroka-dannye-profilia"
       - name: "Административный интерфейс QQBet"
         link: "https://book.gambchamp.com/books/interface-overview/page/administrativnyi-interfeis-qqbet"
+  - name: "Platform Settings"
+    pages:
+      - name: "Язык интерфейса. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/platform-settings/page/iazyk-interfeisa-administrativnyi-interfeis"
+      - name: "Управление пользователями. Административный интерфейс"
+        link: "https://book.gambchamp.com/books/platform-settings/page/upravlenie-polzovateliami-administrativnyi-interfeis"
+  - name: "Intercom"
+    pages:
+      - name: "Данные в Intercom"
+        link: "https://book.gambchamp.com/books/intercom/page/data-in-intercom"
