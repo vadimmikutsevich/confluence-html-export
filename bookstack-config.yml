@@ -17,6 +17,10 @@ books:
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/batch-templates-backoffice"
       - name: "Creating and editing an info card"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-an-info-card"
+      - name: "Wagering Contribution Rules. BackOffice"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/wagering-contribution-rules-backoffice"
+      - name: "Creating and Editing a Wagering Contribution Rule"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-a-wagering-contribution-rule"
   - name: "Notification System"
     pages:
       - name: "Email Templates. BackOffice"
@@ -37,6 +41,10 @@ books:
         link: "https://book.gambchamp.com/books/payment-systems/page/payment-systems-new-backoffice"
       - name: "Editing a payment system"
         link: "https://book.gambchamp.com/books/payment-systems/page/editing-a-payment-system"
+      - name: "Withdrawal Limits. BackOffice"
+        link: "https://book.gambchamp.com/books/payment-systems/page/withdrawal-limits-backoffice"
+      - name: "Creating and Editing a Withdrawal Limit"
+        link: "https://book.gambchamp.com/books/payment-systems/page/creating-and-editing-a-withdrawal-limit"
   - name: "Smartico Integration"
     pages:
       - name: "Configuring Webhooks in the Smartico BackOffice"
@@ -85,6 +93,8 @@ books:
         link: "https://book.gambchamp.com/books/platform-mechanics/page/users-language"
       - name: "Notification Triggers"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/notification-triggers"
+      - name: "Withdrawal Limits"
+        link: "https://book.gambchamp.com/books/platform-mechanics/page/withdrawal-limits"
   - name: "BackOffice"
     pages:
       - name: "BackOffice"

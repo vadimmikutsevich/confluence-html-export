@@ -25,7 +25,7 @@ try {
       connectTimeout: 30_000,
       headersTimeout: 30_000,
       bodyTimeout: 120_000,
-    })
+    }),
   );
 } catch {
   // ignore
@@ -90,7 +90,9 @@ function basicAuthHeader(user, token) {
 }
 
 function sanitizeFilename(input, { maxLen = 140 } = {}) {
-  let s = String(input || "").normalize("NFKC").trim();
+  let s = String(input || "")
+    .normalize("NFKC")
+    .trim();
   // Replace forbidden chars on Windows + control chars.
   s = s.replace(/[<>:"/\\|?*\x00-\x1F]/g, " ");
   // Collapse whitespace.
@@ -162,14 +164,14 @@ async function fetchJson(url, opts = {}) {
           : "";
       throw new Error(
         `Fetch failed for ${url}\n${String(
-          e && e.message ? e.message : e
-        )}${cause}`
+          e && e.message ? e.message : e,
+        )}${cause}`,
       );
     }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
-        `HTTP ${res.status} при запросе ${url}\n${text.slice(0, 1200)}`
+        `HTTP ${res.status} при запросе ${url}\n${text.slice(0, 1200)}`,
       );
     }
     return await res.json();
@@ -205,14 +207,14 @@ async function fetchBinary(url, opts = {}) {
           : "";
       throw new Error(
         `Fetch failed for ${url}\n${String(
-          e && e.message ? e.message : e
-        )}${cause}`
+          e && e.message ? e.message : e,
+        )}${cause}`,
       );
     }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
-        `HTTP ${res.status} при скачивании ${url}\n${text.slice(0, 600)}`
+        `HTTP ${res.status} при скачивании ${url}\n${text.slice(0, 600)}`,
       );
     }
     const ct = res.headers.get("content-type") || "";
@@ -276,7 +278,9 @@ async function resolveBookstackPageIdFromUrl({
     log(`[bs] parseBookstackPageUrl failed for: ${pageUrl}`);
     return null;
   }
-  log(`[bs] Ищем страницу: book_slug=${parsed.bookSlug} page_slug=${parsed.pageSlug}`);
+  log(
+    `[bs] Ищем страницу: book_slug=${parsed.bookSlug} page_slug=${parsed.pageSlug}`,
+  );
 
   const count = 100;
   let offset = 0;
@@ -294,11 +298,13 @@ async function resolveBookstackPageIdFromUrl({
         ? list.results
         : [];
     const total = list.total != null ? list.total : items.length;
-    log(`[bs] Получено ${items.length} страниц (total=${total}, offset=${offset})`);
+    log(
+      `[bs] Получено ${items.length} страниц (total=${total}, offset=${offset})`,
+    );
     if (items.length > 0 && offset === 0) {
       const sample = items[0];
       log(
-        `[bs] Пример первой страницы: id=${sample.id} slug=${sample.slug} book_slug=${sample.book_slug} name="${sample.name}"`
+        `[bs] Пример первой страницы: id=${sample.id} slug=${sample.slug} book_slug=${sample.book_slug} name="${sample.name}"`,
       );
     }
 
@@ -323,11 +329,10 @@ async function resolveBookstackPageIdFromUrl({
  * Rewrite Confluence links in HTML to BookStack links from config.
  * Uses titleById (confluenceId -> title) and configByName (title -> link).
  */
-function rewriteConfluenceLinksToBookstack($, {
-  titleById,
-  configByName,
-  confluenceBase,
-}) {
+function rewriteConfluenceLinksToBookstack(
+  $,
+  { titleById, configByName, confluenceBase },
+) {
   const base = confluenceBase;
   $("a[href]").each((_, a) => {
     const href = String($(a).attr("href") || "").trim();
@@ -391,7 +396,7 @@ async function findOrCreateBook({ bookstackBase, bsAuthHeader, desiredName }) {
     (b) =>
       String(b.name || "")
         .trim()
-        .toLowerCase() === name.toLowerCase()
+        .toLowerCase() === name.toLowerCase(),
   );
   if (exact && exact.id)
     return { id: exact.id, name: exact.name, existed: true };
@@ -448,15 +453,24 @@ function looksLikeUrlText(text) {
   return true;
 }
 
+function looksLikeJoinedMixedScriptText(text) {
+  const t = String(text || "").trim();
+  if (!t) return false;
+  // Confluence export_view can flatten smart links into text like
+  return /[A-Za-z][\u0400-\u04FF]|[\u0400-\u04FF][A-Za-z]/.test(t);
+}
+
 function normalizeAnchorsAndLinks(
   $,
-  { pageUrl, pageId, confluenceBase, rewriteSelfLinks = true }
+  { pageUrl, pageId, confluenceBase, rewriteSelfLinks = true },
 ) {
   const preserveIds = new Set(["__root"]);
   let rewrittenSelfLinks = 0;
 
   const normalizeText = (text, { treatHyphenAsSpace } = {}) => {
-    let t = String(text || "").trim().toLowerCase();
+    let t = String(text || "")
+      .trim()
+      .toLowerCase();
     if (!t) return "";
     if (treatHyphenAsSpace) t = t.replace(/-/g, " ");
     // normalize whitespace
@@ -673,7 +687,7 @@ async function humanizeConfluenceLinkText(
     confluenceBase,
     getTitleById,
     rewriteSamePageHrefToHash = true,
-  }
+  },
 ) {
   const base = confluenceBase;
   const tasks = [];
@@ -704,11 +718,13 @@ async function humanizeConfluenceLinkText(
         }
 
         const text = $a.text();
-        if (!looksLikeUrlText(text)) return;
+        const shouldUseTitle =
+          looksLikeUrlText(text) || looksLikeJoinedMixedScriptText(text);
+        if (!shouldUseTitle) return;
 
         const title = await getTitleById(linkedId).catch(() => "");
         if (title) $a.text(title);
-      })
+      }),
     );
   });
 
@@ -717,7 +733,7 @@ async function humanizeConfluenceLinkText(
 
 async function inlineImagesInHtml(
   html,
-  { confluenceBase, confluenceAuthHeader, concurrency, maxBytes }
+  { confluenceBase, confluenceAuthHeader, concurrency, maxBytes },
 ) {
   const $ = cheerio.load(html, { decodeEntities: false });
 
@@ -764,7 +780,7 @@ async function inlineImagesInHtml(
           const { contentType, bytes } = await fetchBinary(src, { headers });
           if (maxBytes && bytes.length > maxBytes) {
             throw new Error(
-              `Слишком большой файл: ${bytes.length} bytes > ${maxBytes}`
+              `Слишком большой файл: ${bytes.length} bytes > ${maxBytes}`,
             );
           }
 
@@ -782,12 +798,12 @@ async function inlineImagesInHtml(
           // Keep original src on error.
           console.warn(
             `[warn] Не удалось встроить картинку: ${src}\n${String(
-              e && e.message ? e.message : e
-            )}`
+              e && e.message ? e.message : e,
+            )}`,
           );
         }
-      })
-    )
+      }),
+    ),
   );
 
   return {
@@ -800,93 +816,95 @@ async function main() {
   const program = new Command();
   program
     .name("confluence-to-bookstack")
-    .description("CLI: выгрузка страниц Confluence в HTML (и импорт в BookStack)")
+    .description(
+      "CLI: выгрузка страниц Confluence в HTML (и импорт в BookStack)",
+    )
     .requiredOption("--page <urlOrId>", "URL страницы Confluence или pageId")
     .option(
       "--confluence-base <url>",
-      "База Confluence, напр. https://site.atlassian.net/wiki"
+      "База Confluence, напр. https://site.atlassian.net/wiki",
     )
     .option(
       "--confluence-user <email>",
-      "Confluence user/email (или env CONFLUENCE_USER)"
+      "Confluence user/email (или env CONFLUENCE_USER)",
     )
     .option(
       "--confluence-token <token>",
-      "Confluence API token (или env CONFLUENCE_TOKEN)"
+      "Confluence API token (или env CONFLUENCE_TOKEN)",
     )
     .option(
       "--bookstack-base <url>",
-      "База BookStack, напр. https://book.example.com"
+      "База BookStack, напр. https://book.example.com",
     )
     .option(
       "--bookstack-token-id <id>",
-      "BookStack token id (или env BOOKSTACK_TOKEN_ID)"
+      "BookStack token id (или env BOOKSTACK_TOKEN_ID)",
     )
     .option(
       "--bookstack-token-secret <secret>",
-      "BookStack token secret (или env BOOKSTACK_TOKEN_SECRET)"
+      "BookStack token secret (или env BOOKSTACK_TOKEN_SECRET)",
     )
     .option(
       "--book-id <id>",
       "BookStack book_id (если страница без главы)",
-      (v) => (v ? Number(v) : v)
+      (v) => (v ? Number(v) : v),
     )
     .option("--chapter-id <id>", "BookStack chapter_id", (v) =>
-      v ? Number(v) : v
+      v ? Number(v) : v,
     )
     .option(
       "--book-name <name>",
-      "BookStack book name (будет найден/создан, если не указан book-id/chapter-id)"
+      "BookStack book name (будет найден/создан, если не указан book-id/chapter-id)",
     )
     .option("--title <name>", "Переопределить заголовок страницы в BookStack")
     .option(
       "--dry-run",
-      "Не создавать страницу в BookStack, только вывести/сохранить HTML"
+      "Не создавать страницу в BookStack, только вывести/сохранить HTML",
     )
     .option(
       "--out <file>",
-      "Куда сохранить итоговый HTML (для dry-run или отладки)"
+      "Куда сохранить итоговый HTML (для dry-run или отладки)",
     )
     .option(
       "--out-dir <dir>",
       "Папка для сохранения HTML (default: ./confluence-export)",
-      "confluence-export"
+      "confluence-export",
     )
     .option(
       "--recursive",
-      "Рекурсивно выгружать Confluence-страницы, на которые есть ссылки"
+      "Рекурсивно выгружать Confluence-страницы, на которые есть ссылки",
     )
     .option(
       "--max-depth <n>",
       "Глубина рекурсии (default: 1)",
       (v) => Number(v),
-      1
+      1,
     )
     .option("--no-inline-images", "Не встраивать картинки (оставить ссылки)")
     .option(
       "--concurrency <n>",
       "Параллельные скачивания картинок (default: 4)",
       (v) => Number(v),
-      4
+      4,
     )
     .option(
       "--max-bytes <n>",
       "Макс размер одной картинки в байтах (default: 15000000)",
       (v) => Number(v),
-      15_000_000
+      15_000_000,
     )
     .option("--keep-ids", "Сохранить id атрибуты (по умолчанию удаляются)")
     .option(
       "--no-fragment",
-      "Сохранять полный HTML (иначе сохраняется только фрагмент body)"
+      "Сохранять полный HTML (иначе сохраняется только фрагмент body)",
     )
     .option(
       "--config <path>",
-      "Путь к bookstack-config.yml (карта page name -> link для синхронизации)"
+      "Путь к bookstack-config.yml (карта page name -> link для синхронизации)",
     )
     .option(
       "--sync-bookstack",
-      "Экспорт + обновление страниц в BookStack по конфигу (замена ссылок Confluence на BookStack)"
+      "Экспорт + обновление страниц в BookStack по конфигу (замена ссылок Confluence на BookStack)",
     )
     .parse(process.argv);
 
@@ -897,11 +915,11 @@ async function main() {
   const confluenceToken = opts.confluenceToken || process.env.CONFLUENCE_TOKEN;
   requireNonEmpty(
     confluenceUser,
-    "Нужно указать --confluence-user или env CONFLUENCE_USER"
+    "Нужно указать --confluence-user или env CONFLUENCE_USER",
   );
   requireNonEmpty(
     confluenceToken,
-    "Нужно указать --confluence-token или env CONFLUENCE_TOKEN"
+    "Нужно указать --confluence-token или env CONFLUENCE_TOKEN",
   );
 
   const confluenceBase =
@@ -910,7 +928,7 @@ async function main() {
     process.env.CONFLUENCE_BASE;
   requireNonEmpty(
     confluenceBase,
-    "Нужно указать --confluence-base (или env CONFLUENCE_BASE), если вы передаёте только pageId"
+    "Нужно указать --confluence-base (или env CONFLUENCE_BASE), если вы передаёте только pageId",
   );
 
   const confluenceAuthHeader = basicAuthHeader(confluenceUser, confluenceToken);
@@ -924,7 +942,9 @@ async function main() {
     const key = String(id);
     if (titleCache.has(key)) return titleCache.get(key);
     const url = `${confluenceBaseNormalized}/rest/api/content/${key}`;
-    const p = fetchJson(url, { headers: { Authorization: confluenceAuthHeader } })
+    const p = fetchJson(url, {
+      headers: { Authorization: confluenceAuthHeader },
+    })
       .then((j) => String(j.title || "").trim())
       .catch(() => "");
     titleCache.set(key, p);
@@ -935,7 +955,9 @@ async function main() {
     const key = String(id);
     if (fullCache.has(key)) return fullCache.get(key);
     const url = `${confluenceBaseNormalized}/rest/api/content/${key}?expand=body.export_view,space,version`;
-    const p = fetchJson(url, { headers: { Authorization: confluenceAuthHeader } })
+    const p = fetchJson(url, {
+      headers: { Authorization: confluenceAuthHeader },
+    })
       .then((j) => {
         const title = String(j.title || "").trim();
         const html =
@@ -960,14 +982,14 @@ async function main() {
     let html = page.html;
     requireNonEmpty(
       html,
-      `Confluence вернул пустой body.export_view (pageId=${id})`
+      `Confluence вернул пустой body.export_view (pageId=${id})`,
     );
 
     html = `<div id="__root">${html}</div>`;
 
     if (opts.inlineImages) {
       console.log(
-        `[info] Inline images for ${id}... (concurrency=${opts.concurrency}, maxBytes=${opts.maxBytes})`
+        `[info] Inline images for ${id}... (concurrency=${opts.concurrency}, maxBytes=${opts.maxBytes})`,
       );
       const inlined = await inlineImagesInHtml(html, {
         confluenceBase: confluenceBaseNormalized,
@@ -1000,7 +1022,10 @@ async function main() {
     const linkedIds = new Set();
     $("a[href]").each((_, a) => {
       const href = String($(a).attr("href") || "").trim();
-      const pid = extractConfluencePageIdFromHref(href, confluenceBaseNormalized);
+      const pid = extractConfluencePageIdFromHref(
+        href,
+        confluenceBaseNormalized,
+      );
       if (pid && pid !== String(id)) linkedIds.add(pid);
     });
 
@@ -1026,7 +1051,7 @@ async function main() {
 
   const outDir = path.resolve(
     process.cwd(),
-    String(opts.outDir || "confluence-export")
+    String(opts.outDir || "confluence-export"),
   );
   ensureDirSync(outDir);
 
@@ -1065,7 +1090,11 @@ async function main() {
       if (opts.recursive && depth < Number(opts.maxDepth || 1)) {
         for (const linkedId of res.linkedIds) {
           if (!visited.has(linkedId)) {
-            queue.push({ id: linkedId, depth: depth + 1, pageUrlForThis: null });
+            queue.push({
+              id: linkedId,
+              depth: depth + 1,
+              pageUrlForThis: null,
+            });
           }
         }
       }
@@ -1079,11 +1108,10 @@ async function main() {
     };
 
     const configPath =
-      opts.config ||
-      path.resolve(process.cwd(), "bookstack-config.yml");
+      opts.config || path.resolve(process.cwd(), "bookstack-config.yml");
     if (!fs.existsSync(configPath)) {
       throw new Error(
-        `Конфиг не найден: ${configPath}. Укажите --config <path> или положите bookstack-config.yml в корень проекта.`
+        `Конфиг не найден: ${configPath}. Укажите --config <path> или положите bookstack-config.yml в корень проекта.`,
       );
     }
     const configByName = loadBookstackConfig(configPath);
@@ -1092,10 +1120,11 @@ async function main() {
     for (const [name, link] of configByName) {
       if (idx++ < 5) log(`[sync]   конфиг: "${name}" -> ${link}`);
     }
-    if (configByName.size > 5) log(`[sync]   ... и ещё ${configByName.size - 5} записей`);
+    if (configByName.size > 5)
+      log(`[sync]   ... и ещё ${configByName.size - 5} записей`);
 
     let bookstackBase = String(
-      opts.bookstackBase || process.env.BOOKSTACK_BASE || ""
+      opts.bookstackBase || process.env.BOOKSTACK_BASE || "",
     ).replace(/\/+$/, "");
     if (!bookstackBase && configByName.size > 0) {
       const firstLink = configByName.values().next().value;
@@ -1110,7 +1139,7 @@ async function main() {
     }
     requireNonEmpty(
       bookstackBase,
-      "Для --sync-bookstack нужен --bookstack-base (или env BOOKSTACK_BASE), либо ссылки в конфиге"
+      "Для --sync-bookstack нужен --bookstack-base (или env BOOKSTACK_BASE), либо ссылки в конфиге",
     );
     log(`[sync] BookStack base: ${bookstackBase}`);
 
@@ -1119,11 +1148,11 @@ async function main() {
       opts.bookstackTokenSecret || process.env.BOOKSTACK_TOKEN_SECRET;
     requireNonEmpty(
       bsTokenId,
-      "Для --sync-bookstack нужен --bookstack-token-id или env BOOKSTACK_TOKEN_ID"
+      "Для --sync-bookstack нужен --bookstack-token-id или env BOOKSTACK_TOKEN_ID",
     );
     requireNonEmpty(
       bsTokenSecret,
-      "Для --sync-bookstack нужен --bookstack-token-secret или env BOOKSTACK_TOKEN_SECRET"
+      "Для --sync-bookstack нужен --bookstack-token-secret или env BOOKSTACK_TOKEN_SECRET",
     );
     const bsAuthHeader = bookstackAuthHeader(bsTokenId, bsTokenSecret);
 
@@ -1162,12 +1191,11 @@ async function main() {
         configByName,
         confluenceBase: confluenceBaseNormalized,
       });
-      const html =
-        $("body").length
-          ? $("body").html()
-          : $("#__root").length
-            ? $("#__root").html()
-            : $.root().html();
+      const html = $("body").length
+        ? $("body").html()
+        : $("#__root").length
+          ? $("#__root").html()
+          : $.root().html();
       const htmlToSend = html || res.html;
       log(`[sync] Отправка HTML (${htmlToSend.length} символов)...`);
 
@@ -1194,7 +1222,7 @@ async function main() {
   const bookstackBase = String(opts.bookstackBase || "").replace(/\/+$/, "");
   requireNonEmpty(
     bookstackBase,
-    "Нужно указать --bookstack-base, чтобы создавать страницы в BookStack (или используйте --dry-run)"
+    "Нужно указать --bookstack-base, чтобы создавать страницы в BookStack (или используйте --dry-run)",
   );
 
   const bsTokenId = opts.bookstackTokenId || process.env.BOOKSTACK_TOKEN_ID;
@@ -1202,23 +1230,25 @@ async function main() {
     opts.bookstackTokenSecret || process.env.BOOKSTACK_TOKEN_SECRET;
   requireNonEmpty(
     bsTokenId,
-    "Нужно указать --bookstack-token-id или env BOOKSTACK_TOKEN_ID"
+    "Нужно указать --bookstack-token-id или env BOOKSTACK_TOKEN_ID",
   );
   requireNonEmpty(
     bsTokenSecret,
-    "Нужно указать --bookstack-token-secret или env BOOKSTACK_TOKEN_SECRET"
+    "Нужно указать --bookstack-token-secret или env BOOKSTACK_TOKEN_SECRET",
   );
   const bsAuthHeader = bookstackAuthHeader(bsTokenId, bsTokenSecret);
 
   // If target is not specified, ensure a BookStack book exists and use it.
   if (!opts.bookId && !opts.chapterId) {
-    const derivedSpace = pageUrl ? extractConfluenceSpaceKeyFromUrl(pageUrl) : "";
+    const derivedSpace = pageUrl
+      ? extractConfluenceSpaceKeyFromUrl(pageUrl)
+      : "";
     const desiredBookName =
       (opts.bookName && String(opts.bookName).trim()) ||
       (derivedSpace ? `Confluence: ${derivedSpace}` : "Confluence Imports");
 
     console.log(
-      `[info] No target book/chapter provided. Ensuring book "${desiredBookName}"...`
+      `[info] No target book/chapter provided. Ensuring book "${desiredBookName}"...`,
     );
     const book = await findOrCreateBook({
       bookstackBase,
@@ -1227,7 +1257,7 @@ async function main() {
     });
     opts.bookId = book.id;
     console.log(
-      `[info] Using book_id=${book.id} (${book.existed ? "found" : "created"})`
+      `[info] Using book_id=${book.id} (${book.existed ? "found" : "created"})`,
     );
   }
 
@@ -1255,10 +1285,12 @@ async function main() {
     body: JSON.stringify(payload),
   });
 
-  console.log(`[ok] Created BookStack page id=${created.id} name="${created.name}"`);
+  console.log(
+    `[ok] Created BookStack page id=${created.id} name="${created.name}"`,
+  );
   if (created.slug && created.book_slug) {
     console.log(
-      `[ok] Likely URL: ${bookstackBase}/books/${created.book_slug}/page/${created.slug}`
+      `[ok] Likely URL: ${bookstackBase}/books/${created.book_slug}/page/${created.slug}`,
     );
   }
 }
@@ -1267,4 +1299,3 @@ main().catch((e) => {
   console.error(`[error] ${String(e && e.message ? e.message : e)}`);
   process.exitCode = 1;
 });
-
