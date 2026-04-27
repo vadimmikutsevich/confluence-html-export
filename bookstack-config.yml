@@ -123,3 +123,15 @@ books:
         link: "https://book.gambchamp.com/books/users/page/campaign-details-conditions"
       - name: "Batch Details. Bonus types"
         link: "https://book.gambchamp.com/books/users/page/batch-details-bonus-types"
+
+  # Release Notes
+  - name: "Release Notes"
+    pages:
+      - name: "Release Notes v.27 – March 30, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v27-march-30-2026"
+      - name: "Release Notes v.27.1 – April 1, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v271-april-1-2026"
+      - name: "Release Notes v.28 – April 15, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v28-april-15-2026"
+      - name: "Release Notes v.29 – April 22, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v29-april-22-2026"
