@@ -6,7 +6,7 @@ books:
   - name: "Game Hub"
     pages:
       - name: "Creating and Editing a Game"
-        link: "https://book.gambchamp.com/books/game-management/page/creating-and-editing-a-game"
+        link: "https://book.gambchamp.com/books/game-hub/page/creating-and-editing-a-game"
   - name: "Project Settings"
     pages:
       - name: "GEO Management. BackOffice"
