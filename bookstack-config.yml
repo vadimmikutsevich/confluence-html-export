@@ -15,7 +15,7 @@ books:
     pages:
       - name: "Batch Templates. BackOffice"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/batch-templates-backoffice"
-      - name: "Creating and editing an info card"
+      - name: "Creating and Editing an Infocard"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-an-info-card"
       - name: "Wagering Contribution Rules. BackOffice"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/wagering-contribution-rules-backoffice"
@@ -39,7 +39,7 @@ books:
         link: "https://book.gambchamp.com/books/payment-systems/page/creating-and-editing-a-deposit-wager-rule"
       - name: "Payment Systems (new). BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/payment-systems-new-backoffice"
-      - name: "Editing a payment system"
+      - name: "Editing a Payment System"
         link: "https://book.gambchamp.com/books/payment-systems/page/editing-a-payment-system"
       - name: "Withdrawal Limits. BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/withdrawal-limits-backoffice"
@@ -113,7 +113,7 @@ books:
         link: "https://book.gambchamp.com/books/posthog-integration/page/analysis-of-user-search-queries"
   - name: "Game Aggregator Integration"
     pages:
-      - name: "Jackpot campaign list"
+      - name: "Jackpot Campaign List"
         link: "https://book.gambchamp.com/books/game-aggregator-integration/page/jackpot-campaign-list"
       - name: "Creating and editing a jackpot campaign"
         link: "https://book.gambchamp.com/books/game-aggregator-integration/page/creating-and-editing-a-jackpot-campaign"
