@@ -7,6 +7,10 @@ books:
     pages:
       - name: "Creating and Editing a Game"
         link: "https://book.gambchamp.com/books/game-hub/page/creating-and-editing-a-game"
+      - name: "Vendor Management. BackOffice"
+        link: "https://book.gambchamp.com/books/game-hub/page/vendor-management-backoffice"
+      - name: "Editing Vendor"
+        link: "https://book.gambchamp.com/books/game-hub/page/editing-vendor"
   - name: "Project Settings"
     pages:
       - name: "GEO Management. BackOffice"
@@ -135,3 +139,7 @@ books:
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v28-april-15-2026"
       - name: "Release Notes v.29 – April 22, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v29-april-22-2026"
+      - name: "Release Notes v.30 – May 6, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v30-may-6-2026"
+      - name: "Release Notes v.31 – May 19, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v31-may-19-2026"
