@@ -109,6 +109,8 @@ books:
         link: "https://book.gambchamp.com/books/player-interface/page/fast-deposit"
       - name: "Player Profile. Profile Data"
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-profile-data"
+      - name: "Player Profile. Security"
+        link: "https://book.gambchamp.com/books/player-interface/page/player-profile-security"
   - name: "PostHog Integration"
     pages:
       - name: "Data in PostHog"
@@ -127,6 +129,10 @@ books:
         link: "https://book.gambchamp.com/books/users/page/campaign-details-conditions"
       - name: "Batch Details. Bonus types"
         link: "https://book.gambchamp.com/books/users/page/batch-details-bonus-types"
+      - name: "Player Limits"
+        link: "https://book.gambchamp.com/books/users/page/player-limits"
+      - name: "Account Freeze"
+        link: "https://book.gambchamp.com/books/users/page/account-freeze"
 
   # Release Notes
   - name: "Release Notes"
