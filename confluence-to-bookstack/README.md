@@ -3,8 +3,7 @@
 CLI утилита для выгрузки страниц Confluence в HTML и (опционально) импорта в BookStack:
 
 - Забирает HTML страницы из Confluence через `body.export_view` (экспортный HTML).
-- Опционально **встраивает картинки в HTML как `data:` (base64)**.
-  BookStack при создании страницы умеет “вытаскивать” base64-картинки и сохранять их как gallery images (см. API docs BookStack: [Pages → create](https://demo.bookstackapp.com/api/docs#pages-create)).
+- При импорте в BookStack скачивает картинки, загружает их в BookStack image gallery и подставляет BookStack URL в HTML.
 - Умеет **сохранять файл по title** и **рекурсивно выгружать связанные страницы** (по ссылкам `/pages/<id>`).
 
 ## Установка
@@ -76,7 +75,6 @@ npm run c2b -- ^
   --page "https://gambchamp.atlassian.net/wiki/spaces/BP/pages/197230594/-+." ^
   --recursive ^
   --max-depth 10 ^
-  --no-inline-images ^
   --sync-bookstack ^
   --config bookstack-config.yml
 ```
@@ -93,10 +91,8 @@ npm run c2b -- ^
 - `--out-dir`: папка, куда сохранять HTML в `--dry-run` режиме (по умолчанию `confluence-export`).
 - `--recursive`: дополнительно выгружать страницы Confluence, на которые есть ссылки.
 - `--max-depth`: глубина рекурсии.
-- `--no-inline-images`: не встраивать картинки (оставить ссылки).
 - `--concurrency`: параллельные скачивания картинок (по умолчанию 4).
 - `--max-bytes`: лимит размера одной картинки (по умолчанию 15MB).
 - `--keep-ids`: не удалять `id` атрибуты при чистке HTML.
 - `--config`: путь к `bookstack-config.yml` (карта page name → link).
 - `--sync-bookstack`: экспорт + обновление страниц в BookStack по конфигу, замена ссылок Confluence → BookStack.
-

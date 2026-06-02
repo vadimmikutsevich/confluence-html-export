@@ -37,6 +37,9 @@ const { Command } = require("commander");
 const cheerio = require("cheerio");
 const yaml = require("js-yaml");
 const pLimitImport = require("p-limit");
+const {
+  uploadImagesToBookstackGalleryInHtml,
+} = require("./bookstack-image-gallery");
 const pLimit =
   typeof pLimitImport === "function" ? pLimitImport : pLimitImport.default;
 
@@ -175,51 +178,6 @@ async function fetchJson(url, opts = {}) {
       );
     }
     return await res.json();
-  }
-  throw lastErr || new Error(`Fetch failed for ${url}`);
-}
-
-async function fetchBinary(url, opts = {}) {
-  const maxAttempts = 4;
-  let lastErr = null;
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    let res;
-    try {
-      res = await fetch(url, opts);
-    } catch (e) {
-      lastErr = e;
-      const code = e && e.cause && e.cause.code ? String(e.cause.code) : "";
-      const retriable = [
-        "UND_ERR_CONNECT_TIMEOUT",
-        "UND_ERR_SOCKET",
-        "ECONNRESET",
-        "ETIMEDOUT",
-        "ENOTFOUND",
-      ].includes(code);
-      if (attempt < maxAttempts && retriable) {
-        const waitMs = 400 * Math.pow(2, attempt - 1);
-        await new Promise((r) => setTimeout(r, waitMs));
-        continue;
-      }
-      const cause =
-        e && e.cause
-          ? `\nCause: ${e.cause.code || ""} ${e.cause.message || e.cause}`
-          : "";
-      throw new Error(
-        `Fetch failed for ${url}\n${String(
-          e && e.message ? e.message : e,
-        )}${cause}`,
-      );
-    }
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(
-        `HTTP ${res.status} при скачивании ${url}\n${text.slice(0, 600)}`,
-      );
-    }
-    const ct = res.headers.get("content-type") || "";
-    const ab = await res.arrayBuffer();
-    return { contentType: ct, bytes: Buffer.from(ab) };
   }
   throw lastErr || new Error(`Fetch failed for ${url}`);
 }
@@ -416,22 +374,6 @@ async function findOrCreateBook({ bookstackBase, bsAuthHeader, desiredName }) {
   });
 
   return { id: created.id, name: created.name, existed: false };
-}
-
-function guessContentTypeByPathname(urlStr) {
-  try {
-    const u = new URL(urlStr);
-    const p = u.pathname.toLowerCase();
-    if (p.endsWith(".png")) return "image/png";
-    if (p.endsWith(".jpg") || p.endsWith(".jpeg")) return "image/jpeg";
-    if (p.endsWith(".gif")) return "image/gif";
-    if (p.endsWith(".webp")) return "image/webp";
-    if (p.endsWith(".svg")) return "image/svg+xml";
-    if (p.endsWith(".avif")) return "image/avif";
-  } catch {
-    // ignore
-  }
-  return "";
 }
 
 function absolutizeMaybe(urlStr, base) {
@@ -731,87 +673,6 @@ async function humanizeConfluenceLinkText(
   await Promise.all(tasks);
 }
 
-async function inlineImagesInHtml(
-  html,
-  { confluenceBase, confluenceAuthHeader, concurrency, maxBytes },
-) {
-  const $ = cheerio.load(html, { decodeEntities: false });
-
-  // Make src/href absolute early so we can fetch.
-  $("img").each((_, img) => {
-    const src = $(img).attr("src");
-    if (src) $(img).attr("src", absolutizeMaybe(src, confluenceBase));
-  });
-  $("a").each((_, a) => {
-    const href = $(a).attr("href");
-    if (href) $(a).attr("href", absolutizeMaybe(href, confluenceBase));
-  });
-
-  const imgs = $("img").toArray();
-  const limit = pLimit(concurrency);
-  const bySrc = new Map();
-  let ok = 0;
-  let fail = 0;
-  let skipped = 0;
-
-  await Promise.all(
-    imgs.map((img) =>
-      limit(async () => {
-        const src = String($(img).attr("src") || "").trim();
-        if (!src) return;
-        if (src.startsWith("data:")) {
-          skipped += 1;
-          return;
-        }
-
-        if (bySrc.has(src)) {
-          $(img).attr("src", bySrc.get(src));
-          ok += 1;
-          return;
-        }
-
-        try {
-          const u = new URL(src);
-          const headers = {};
-          if (u.origin === new URL(confluenceBase).origin) {
-            headers.Authorization = confluenceAuthHeader;
-          }
-
-          const { contentType, bytes } = await fetchBinary(src, { headers });
-          if (maxBytes && bytes.length > maxBytes) {
-            throw new Error(
-              `Слишком большой файл: ${bytes.length} bytes > ${maxBytes}`,
-            );
-          }
-
-          const ct =
-            contentType.split(";")[0].trim() ||
-            guessContentTypeByPathname(src) ||
-            "application/octet-stream";
-          const b64 = bytes.toString("base64");
-          const dataUri = `data:${ct};base64,${b64}`;
-          bySrc.set(src, dataUri);
-          $(img).attr("src", dataUri);
-          ok += 1;
-        } catch (e) {
-          fail += 1;
-          // Keep original src on error.
-          console.warn(
-            `[warn] Не удалось встроить картинку: ${src}\n${String(
-              e && e.message ? e.message : e,
-            )}`,
-          );
-        }
-      }),
-    ),
-  );
-
-  return {
-    html: $.root().html(),
-    stats: { ok, fail, skipped, unique: bySrc.size },
-  };
-}
-
 async function main() {
   const program = new Command();
   program
@@ -880,7 +741,6 @@ async function main() {
       (v) => Number(v),
       1,
     )
-    .option("--no-inline-images", "Не встраивать картинки (оставить ссылки)")
     .option(
       "--concurrency <n>",
       "Параллельные скачивания картинок (default: 4)",
@@ -987,19 +847,6 @@ async function main() {
 
     html = `<div id="__root">${html}</div>`;
 
-    if (opts.inlineImages) {
-      console.log(
-        `[info] Inline images for ${id}... (concurrency=${opts.concurrency}, maxBytes=${opts.maxBytes})`,
-      );
-      const inlined = await inlineImagesInHtml(html, {
-        confluenceBase: confluenceBaseNormalized,
-        confluenceAuthHeader,
-        concurrency: opts.concurrency,
-        maxBytes: opts.maxBytes,
-      });
-      html = inlined.html;
-    }
-
     const $ = cheerio.load(html, { decodeEntities: false });
 
     // Improve link text (URL -> title) for Confluence page links.
@@ -1076,7 +923,18 @@ async function main() {
       visited.add(id);
 
       console.log(`[info] Export pageId=${id} depth=${depth}`);
-      const res = await renderCleanFragment({ id, pageUrlForThis });
+      let res;
+      try {
+        res = await renderCleanFragment({ id, pageUrlForThis });
+      } catch (e) {
+        if (id === String(pageId)) throw e;
+        console.warn(
+          `[warn] Skip pageId=${id}: ${String(
+            e && e.message ? e.message : e,
+          )}`,
+        );
+        continue;
+      }
       exported.push(res);
 
       const outPath = makeOutPath({
@@ -1196,7 +1054,33 @@ async function main() {
         : $("#__root").length
           ? $("#__root").html()
           : $.root().html();
-      const htmlToSend = html || res.html;
+      let htmlToSend = html || res.html;
+
+      log(
+        `[sync] Upload images to BookStack gallery for page_id=${pageIdBs}...`,
+      );
+      const galleryImages = await uploadImagesToBookstackGalleryInHtml(
+        htmlToSend,
+        {
+          bookstackBase,
+          bsAuthHeader,
+          pageId: pageIdBs,
+          confluenceBase: confluenceBaseNormalized,
+          confluenceAuthHeader,
+          concurrency: opts.concurrency,
+          maxBytes: opts.maxBytes,
+          log,
+        },
+      );
+      htmlToSend = galleryImages.html || htmlToSend;
+      log(
+        `[sync] Images: uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
+      );
+      if (galleryImages.stats.fail > 0) {
+        throw new Error(
+          `Image gallery upload failed for ${galleryImages.stats.fail} image(s); skip BookStack page update.`,
+        );
+      }
       log(`[sync] Отправка HTML (${htmlToSend.length} символов)...`);
 
       await updateBookstackPage({
@@ -1288,6 +1172,39 @@ async function main() {
   console.log(
     `[ok] Created BookStack page id=${created.id} name="${created.name}"`,
   );
+
+  if (created.id) {
+    console.log(
+      `[info] Upload images to BookStack gallery for page_id=${created.id}...`,
+    );
+    const galleryImages = await uploadImagesToBookstackGalleryInHtml(
+      rootRendered.html,
+      {
+        bookstackBase,
+        bsAuthHeader,
+        pageId: created.id,
+        confluenceBase: confluenceBaseNormalized,
+        confluenceAuthHeader,
+        concurrency: opts.concurrency,
+        maxBytes: opts.maxBytes,
+        log: (msg) => console.log(msg),
+      },
+    );
+    if (galleryImages.stats.ok || galleryImages.stats.fail) {
+      await updateBookstackPage({
+        bookstackBase,
+        bsAuthHeader,
+        pageId: created.id,
+        html: galleryImages.html || rootRendered.html,
+        name: rootRendered.title,
+        log: (msg) => console.log(msg),
+      });
+    }
+    console.log(
+      `[info] Images: uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
+    );
+  }
+
   if (created.slug && created.book_slug) {
     console.log(
       `[ok] Likely URL: ${bookstackBase}/books/${created.book_slug}/page/${created.slug}`,
