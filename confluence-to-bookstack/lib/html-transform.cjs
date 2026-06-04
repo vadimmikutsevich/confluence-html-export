@@ -18,6 +18,15 @@ function looksLikeJoinedMixedScriptText(text) {
   return /[A-Za-z][\u0400-\u04FF]|[\u0400-\u04FF][A-Za-z]/.test(t);
 }
 
+function normalizeComparableText(text) {
+  return String(text || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizeAnchorsAndLinks(
   $,
   { pageUrl, pageId, confluenceBase, rewriteSelfLinks = true },
@@ -211,6 +220,143 @@ function stripConfluenceNoise($, { keepIds, preserveIds }) {
   });
 }
 
+function removeConfluenceTinyImages($) {
+  let removed = 0;
+
+  $("img[src]").each((_, img) => {
+    const $img = $(img);
+    const src = String($img.attr("src") || "");
+    const width = Number($img.attr("width") || 0);
+    const height = Number($img.attr("height") || 0);
+
+    const isConfluenceIcon =
+      src.includes("/images/icons/emoticons/") ||
+      src.includes("/images/icons/");
+    const isTiny = width > 0 && height > 0 && width <= 32 && height <= 32;
+
+    if (isConfluenceIcon || isTiny) {
+      $img.remove();
+      removed += 1;
+    }
+  });
+
+  return { removed };
+}
+
+function removeConfluencePageToc($) {
+  let removed = 0;
+
+  const headingById = new Map();
+  $("h1,h2,h3,h4,h5,h6").each((_, heading) => {
+    const id = String($(heading).attr("id") || "").trim();
+    if (!id) return;
+    headingById.set(id, normalizeComparableText($(heading).text()));
+  });
+
+  const isLocalHeadingHref = (href) => {
+    const raw = String(href || "").trim();
+    if (!raw.startsWith("#")) return false;
+    let id = raw.slice(1);
+    try {
+      id = decodeURIComponent(id);
+    } catch {
+      // ignore
+    }
+    return headingById.has(id);
+  };
+
+  const isStrictTocCandidate = ($candidate) => {
+    if (!$candidate || !$candidate.length || headingById.size === 0) return false;
+
+    const disallowed = $candidate
+      .find("*")
+      .toArray()
+      .some((el) => {
+        const tag = String(el.tagName || el.name || "").toLowerCase();
+        return !["div", "nav", "ul", "ol", "li", "a", "span"].includes(tag);
+      });
+    if (disallowed) return false;
+
+    const anchors = $candidate.find("a[href]").toArray();
+    if (anchors.length < 2) return false;
+
+    let validLocalHeadingLinks = 0;
+    let matchingTextLinks = 0;
+    for (const a of anchors) {
+      const href = String($(a).attr("href") || "").trim();
+      if (!isLocalHeadingHref(href)) return false;
+      validLocalHeadingLinks += 1;
+
+      let id = href.slice(1);
+      try {
+        id = decodeURIComponent(id);
+      } catch {
+        // ignore
+      }
+      const linkText = normalizeComparableText($(a).text());
+      const headingText = headingById.get(id);
+      if (linkText && headingText && linkText === headingText) {
+        matchingTextLinks += 1;
+      }
+    }
+
+    return (
+      validLocalHeadingLinks === anchors.length &&
+      matchingTextLinks / anchors.length >= 0.6
+    );
+  };
+
+  const removeCandidate = ($candidate) => {
+    if (!$candidate || !$candidate.length) return false;
+    $candidate.remove();
+    removed += 1;
+    return true;
+  };
+
+  const macroSelectors = [
+    '[data-macro-name="toc"]',
+    '[data-macro-name="table-of-contents"]',
+    ".toc-macro",
+    ".toc",
+    ".table-of-contents",
+    ".confluenceTableOfContents",
+  ];
+
+  for (const selector of macroSelectors) {
+    $(selector).each((_, el) => {
+      const $candidate = $(el);
+      if (isStrictTocCandidate($candidate)) removeCandidate($candidate);
+    });
+  }
+
+  const $root = $("#__root").first();
+  if (!$root.length) return { removed };
+
+  const children = $root.children().toArray();
+  const firstHeadingIndex = children.findIndex((el) =>
+    /^h[1-6]$/i.test(String(el.tagName || el.name || "")),
+  );
+  if (firstHeadingIndex <= 0) return { removed };
+
+  const candidatesBeforeHeading = children.slice(0, firstHeadingIndex);
+  const meaningful = candidatesBeforeHeading.filter((el) => {
+    const text = String($(el).text() || "").trim();
+    const hasList = $(el).is("ul,ol") || $(el).find("ul,ol").length > 0;
+    return text || hasList;
+  });
+  if (meaningful.length !== 1) return { removed };
+
+  const $candidate = $(meaningful[0]);
+  if (
+    ($candidate.is("ul,ol") || $candidate.children("ul,ol").length === 1) &&
+    isStrictTocCandidate($candidate)
+  ) {
+    removeCandidate($candidate);
+  }
+
+  return { removed };
+}
+
 async function humanizeConfluenceLinkText(
   $,
   {
@@ -293,6 +439,8 @@ function rewriteConfluenceLinksToBookstack(
 module.exports = {
   humanizeConfluenceLinkText,
   normalizeAnchorsAndLinks,
+  removeConfluencePageToc,
+  removeConfluenceTinyImages,
   rewriteConfluenceLinksToBookstack,
   stripConfluenceNoise,
 };

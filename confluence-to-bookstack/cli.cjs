@@ -67,6 +67,8 @@ const {
 const {
   humanizeConfluenceLinkText,
   normalizeAnchorsAndLinks,
+  removeConfluencePageToc,
+  removeConfluenceTinyImages,
   rewriteConfluenceLinksToBookstack,
   stripConfluenceNoise,
 } = HtmlTransform;
@@ -214,6 +216,8 @@ async function main() {
     html = `<div id="__root">${html}</div>`;
 
     const $ = cheerio.load(html, { decodeEntities: false });
+    removeConfluenceTinyImages($);
+    removeConfluencePageToc($);
 
     // Improve link text (URL -> title) for Confluence page links.
     await humanizeConfluenceLinkText($, {
