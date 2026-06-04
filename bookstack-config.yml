@@ -63,6 +63,10 @@ books:
         link: "https://book.gambchamp.com/books/content-management/page/payment-methods-backoffice"
       - name: "Payment Stickers. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/payment-stickers-backoffice"
+      - name: "Onboarding. BackOffice"
+        link: "https://book.gambchamp.com/books/content-management/page/onboarding-backoffice"
+      - name: "Creating and Editing Onboarding Flow"
+        link: "https://book.gambchamp.com/books/content-management/page/creating-and-editing-onboarding-flow"
   - name: "Analytics"
     pages:
       - name: "PowerBI Reports. BackOffice"
@@ -111,6 +115,10 @@ books:
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-profile-data"
       - name: "Player Profile. Security"
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-security"
+      - name: "Registration Onboarding"
+        link: "https://book.gambchamp.com/books/player-interface/page/registration-onboarding"
+      - name: "Wallet"
+        link: "https://book.gambchamp.com/books/player-interface/page/wallet"
   - name: "PostHog Integration"
     pages:
       - name: "Data in PostHog"
