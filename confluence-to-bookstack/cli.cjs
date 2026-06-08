@@ -65,10 +65,10 @@ const {
   updateBookstackPage,
 } = BookStack;
 const {
+  classifyConfluenceImages,
   humanizeConfluenceLinkText,
   normalizeAnchorsAndLinks,
   removeConfluencePageToc,
-  removeConfluenceTinyImages,
   rewriteConfluenceLinksToBookstack,
   stripConfluenceNoise,
 } = HtmlTransform;
@@ -216,7 +216,7 @@ async function main() {
     html = `<div id="__root">${html}</div>`;
 
     const $ = cheerio.load(html, { decodeEntities: false });
-    removeConfluenceTinyImages($);
+    classifyConfluenceImages($);
     removeConfluencePageToc($);
 
     // Improve link text (URL -> title) for Confluence page links.
@@ -386,6 +386,19 @@ async function main() {
 
     const titleById = new Map();
     for (const r of exported) titleById.set(r.id, r.title);
+    const linkedIdsToResolve = new Set();
+    for (const r of exported) {
+      for (const linkedId of r.linkedIds || []) {
+        if (!titleById.has(linkedId)) linkedIdsToResolve.add(linkedId);
+      }
+    }
+    if (linkedIdsToResolve.size > 0) {
+      log(`[sync] Resolve linked page titles: ${linkedIdsToResolve.size}`);
+      for (const linkedId of linkedIdsToResolve) {
+        const linkedTitle = await getTitleById(linkedId).catch(() => "");
+        if (linkedTitle) titleById.set(linkedId, linkedTitle);
+      }
+    }
     log(`[sync] Экспортировано страниц: ${exported.length}`);
 
     let updated = 0;
@@ -414,11 +427,27 @@ async function main() {
       log(`[sync] BookStack page_id=${pageIdBs}, переписываем ссылки...`);
 
       const $ = cheerio.load(res.html, { decodeEntities: false });
-      rewriteConfluenceLinksToBookstack($, {
+      const linkRewriteStats = rewriteConfluenceLinksToBookstack($, {
         titleById,
         configByName,
         confluenceBase: confluenceBaseNormalized,
       });
+      if (linkRewriteStats.rewritten || linkRewriteStats.disabled) {
+        log(
+          `[sync] Links: rewritten=${linkRewriteStats.rewritten}, disabled=${linkRewriteStats.disabled}`,
+        );
+      }
+      if (linkRewriteStats.disabled > 0) {
+        for (const item of linkRewriteStats.unresolved.slice(0, 5)) {
+          const label = item.title || item.text || item.linkedId || item.href;
+          log(`[warn] Disabled Confluence link: ${label} -> ${item.href}`);
+        }
+        if (linkRewriteStats.unresolved.length > 5) {
+          log(
+            `[warn] ... and ${linkRewriteStats.unresolved.length - 5} more disabled Confluence links`,
+          );
+        }
+      }
       const html = $("body").length
         ? $("body").html()
         : $("#__root").length
@@ -444,7 +473,7 @@ async function main() {
       );
       htmlToSend = galleryImages.html || htmlToSend;
       log(
-        `[sync] Images: uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
+        `[sync] Images: deleted=${galleryImages.stats.deleted}, uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
       );
       if (galleryImages.stats.fail > 0) {
         throw new Error(
@@ -571,7 +600,7 @@ async function main() {
       });
     }
     console.log(
-      `[info] Images: uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
+      `[info] Images: deleted=${galleryImages.stats.deleted}, uploaded=${galleryImages.stats.ok}, failed=${galleryImages.stats.fail}, skipped=${galleryImages.stats.skipped}`,
     );
   }
 

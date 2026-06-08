@@ -135,6 +135,62 @@ async function fetchJson(url, opts = {}) {
   return await res.json();
 }
 
+async function fetchMaybeJson(url, opts = {}) {
+  const res = await fetch(url, opts);
+  if (opts.treat404AsSuccess && res.status === 404) return null;
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} for ${url}\n${text.slice(0, 1200)}`);
+  }
+
+  const text = await res.text().catch(() => "");
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function isRetriableFetchError(error) {
+  const code = error && error.cause && error.cause.code
+    ? String(error.cause.code)
+    : "";
+  return [
+    "UND_ERR_CONNECT_TIMEOUT",
+    "UND_ERR_HEADERS_TIMEOUT",
+    "UND_ERR_SOCKET",
+    "ECONNRESET",
+    "ETIMEDOUT",
+    "ENOTFOUND",
+  ].includes(code);
+}
+
+async function withRetry(fn, { attempts = 4, label = "request", log = () => {} }) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      const message = String(e && e.message ? e.message : e);
+      const retriable =
+        isRetriableFetchError(e) ||
+        /\bfetch failed\b/i.test(message) ||
+        /\bHTTP 5\d\d\b/.test(message);
+
+      if (!retriable || attempt >= attempts) break;
+
+      const waitMs = 500 * Math.pow(2, attempt - 1);
+      log(`[retry] ${label} failed, retry ${attempt + 1}/${attempts} in ${waitMs}ms`);
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+  }
+
+  throw lastError || new Error(`${label} failed`);
+}
+
 function parseConfluenceAttachmentImageUrl(src, confluenceBase) {
   if (!src || !confluenceBase) return null;
   try {
@@ -236,6 +292,94 @@ async function uploadBookstackGalleryImage({
   });
 }
 
+async function listBookstackGalleryImagesForPage({
+  bookstackBase,
+  bsAuthHeader,
+  pageId,
+  log,
+}) {
+  const images = [];
+  const count = 100;
+
+  for (let offset = 0; ; offset += count) {
+    const url =
+      `${bookstackBase}/api/image-gallery?count=${count}&offset=${offset}`;
+    const json = await withRetry(
+      () =>
+        fetchJson(url, {
+          headers: {
+            Authorization: bsAuthHeader,
+            Accept: "application/json",
+          },
+        }),
+      { label: `list image-gallery offset=${offset}`, log },
+    );
+
+    const data = Array.isArray(json.data) ? json.data : [];
+    for (const image of data) {
+      if (
+        String(image.uploaded_to || "") === String(pageId) &&
+        String(image.type || "") === "gallery"
+      ) {
+        images.push(image);
+      }
+    }
+
+    const total = Number(json.total || 0);
+    if (data.length < count) break;
+    if (total > 0 && offset + data.length >= total) break;
+  }
+
+  return images;
+}
+
+async function deleteBookstackGalleryImage({
+  bookstackBase,
+  bsAuthHeader,
+  id,
+  log,
+}) {
+  await withRetry(
+    () =>
+      fetchMaybeJson(`${bookstackBase}/api/image-gallery/${id}`, {
+        method: "DELETE",
+        treat404AsSuccess: true,
+        headers: {
+          Authorization: bsAuthHeader,
+          Accept: "application/json",
+        },
+      }),
+    { label: `delete image-gallery id=${id}`, log },
+  );
+}
+
+async function deleteBookstackGalleryImagesForPage({
+  bookstackBase,
+  bsAuthHeader,
+  pageId,
+  log,
+}) {
+  const images = await listBookstackGalleryImagesForPage({
+    bookstackBase,
+    bsAuthHeader,
+    pageId,
+    log,
+  });
+  if (images.length === 0) return 0;
+
+  log(`[images] deleting existing page gallery images: ${images.length}`);
+  for (const image of images) {
+    await deleteBookstackGalleryImage({
+      bookstackBase,
+      bsAuthHeader,
+      id: image.id,
+      log,
+    });
+  }
+
+  return images.length;
+}
+
 function preferredBookstackImageUrl(uploaded) {
   return (
     uploaded &&
@@ -275,6 +419,19 @@ async function uploadImagesToBookstackGalleryInHtml(
   let ok = 0;
   let fail = 0;
   let skipped = 0;
+  let deleted = 0;
+
+  if (imgs.length > 0) {
+    deleted = await deleteBookstackGalleryImagesForPage({
+      bookstackBase,
+      bsAuthHeader,
+      pageId,
+      log,
+    });
+    if (deleted > 0) {
+      log(`[images] deleted existing page gallery images: ${deleted}`);
+    }
+  }
 
   await Promise.all(
     imgs.map((img) =>
@@ -387,7 +544,7 @@ async function uploadImagesToBookstackGalleryInHtml(
 
   return {
     html: $("body").length ? $("body").html() : $.root().html(),
-    stats: { ok, fail, skipped, unique: bySrc.size },
+    stats: { ok, fail, skipped, deleted, unique: bySrc.size },
   };
 }
 
