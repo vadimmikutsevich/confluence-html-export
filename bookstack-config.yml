@@ -11,6 +11,10 @@ books:
         link: "https://book.gambchamp.com/books/game-hub/page/vendor-management-backoffice"
       - name: "Editing Vendor"
         link: "https://book.gambchamp.com/books/game-hub/page/editing-vendor"
+      - name: "Creating and Editing Categories"
+        link: "https://book.gambchamp.com/books/game-hub/page/creating-and-editing-categories"
+      - name: "Category Configuration"
+        link: "https://book.gambchamp.com/books/game-hub/page/category-configuration"
   - name: "Project Settings"
     pages:
       - name: "GEO Management. BackOffice"
@@ -25,6 +29,12 @@ books:
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/wagering-contribution-rules-backoffice"
       - name: "Creating and Editing a Wagering Contribution Rule"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-a-wagering-contribution-rule"
+      - name: "Rules of balance logic. BackOffice"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/rules-of-balance-logic-backoffice"
+      - name: "Viewing, Creating, and Editing a Bonus Batch Template"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/viewing-creating-and-editing-a-bonus-batch-template"
+      - name: "Creating and Editing a Balance Logic Rule"
+        link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-a-balance-logic-rule"
   - name: "Notification System"
     pages:
       - name: "Email Templates. BackOffice"
@@ -123,6 +133,8 @@ books:
         link: "https://book.gambchamp.com/books/player-interface/page/wallet"
       - name: "Reward Hub"
         link: "https://book.gambchamp.com/books/player-interface/page/reward-hub"
+      - name: "Campaign Pop-up"
+        link: "https://book.gambchamp.com/books/player-interface/page/campaign-pop-up"
   - name: "PostHog Integration"
     pages:
       - name: "Data in PostHog"
@@ -149,6 +161,8 @@ books:
     pages:
       - name: "Configuring User Segmentation Tag Filters"
         link: "https://book.gambchamp.com/books/tags-segments/page/configuring-user-segmentation-tag-filters"
+      - name: "Configuring Game Segmentation Tag Filters"
+        link: "https://book.gambchamp.com/books/tags-segments/page/configuring-game-segmentation-tag-filters"
 
   # Release Notes
   - name: "Release Notes"
@@ -167,3 +181,5 @@ books:
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v31-may-19-2026"
       - name: "Release Notes v.32 – June 3, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v32-june-3-2026"
+      - name: "Release Notes v.33 – June 20, 2026"
+        link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v33-june-20-2026"
