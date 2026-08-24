@@ -69,8 +69,6 @@ books:
     pages:
       - name: "Help Center Settings. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/help-center-settings-backoffice"
-      - name: "Main Screen. BackOffice"
-        link: "https://book.gambchamp.com/books/content-management/page/main-screen-backoffice"
       - name: "Payment Methods. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/payment-methods-backoffice"
       - name: "Payment Stickers. BackOffice"
@@ -121,8 +119,6 @@ books:
         link: "https://book.gambchamp.com/books/backoffice/page/backoffice"
   - name: "Player Interface"
     pages:
-      - name: "Fast Deposit"
-        link: "https://book.gambchamp.com/books/player-interface/page/fast-deposit"
       - name: "Player Profile. Profile Data"
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-profile-data"
       - name: "Player Profile. Security"
@@ -135,6 +131,8 @@ books:
         link: "https://book.gambchamp.com/books/player-interface/page/reward-hub"
       - name: "Campaign Pop-up"
         link: "https://book.gambchamp.com/books/player-interface/page/campaign-pop-up"
+      - name: "Loyalty Program Page"
+        link: "https://book.gambchamp.com/books/player-interface/page/loyalty-program-page"
   - name: "PostHog Integration"
     pages:
       - name: "Data in PostHog"
