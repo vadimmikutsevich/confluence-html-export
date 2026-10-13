@@ -69,8 +69,6 @@ books:
     pages:
       - name: "Help Center Settings. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/help-center-settings-backoffice"
-      - name: "Payment Methods. BackOffice"
-        link: "https://book.gambchamp.com/books/content-management/page/payment-methods-backoffice"
       - name: "Payment Stickers. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/payment-stickers-backoffice"
       - name: "Onboarding. BackOffice"
