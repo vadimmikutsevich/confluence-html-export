@@ -99,7 +99,7 @@ async function fetchConfluenceAttachmentBinary({
       Authorization: confluenceAuthHeader,
       Accept: "application/json",
     },
-  });
+  }, { attempts: 1 });
 
   const items = Array.isArray(list.results) ? list.results : [];
   const exact = items.find(

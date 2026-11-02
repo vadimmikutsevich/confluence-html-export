@@ -1,5 +1,5 @@
 const RETRY_CODES = new Set([
-  "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_SOCKET",
   "ECONNRESET", "ETIMEDOUT", "ENOTFOUND",
 ]);
 
@@ -7,6 +7,8 @@ async function request(url, options = {}, {
   attempts = 4,
   retryServerErrors = false,
   allowNotFound = false,
+  retryHeadersTimeout = false,
+  retryDelayMs = 400,
   log = () => {},
 } = {}) {
   for (let attempt = 1; ; attempt += 1) {
@@ -22,9 +24,10 @@ async function request(url, options = {}, {
       return response;
     } catch (error) {
       const retryable = RETRY_CODES.has(error.cause?.code) ||
+        (retryHeadersTimeout && error.cause?.code === "UND_ERR_HEADERS_TIMEOUT") ||
         (retryServerErrors && (error.status >= 500 || /fetch failed/i.test(error.message)));
       if (!retryable || attempt >= attempts) throw error;
-      const delay = 400 * 2 ** (attempt - 1);
+      const delay = retryDelayMs * 2 ** (attempt - 1);
       log(`[retry] ${options.method || "GET"} ${url}: ${attempt + 1}/${attempts}`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

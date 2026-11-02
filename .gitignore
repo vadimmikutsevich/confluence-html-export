@@ -1,2 +1,4 @@
 .env
 node_modules/
+confluence-to-bookstack/web/dist/
+confluence-export/

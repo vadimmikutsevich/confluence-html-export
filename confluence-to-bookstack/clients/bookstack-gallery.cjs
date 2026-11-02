@@ -44,7 +44,7 @@ async function listBookstackGalleryImagesForPage({
       `${bookstackBase}/api/image-gallery?count=${count}&offset=${offset}`;
     const json = await fetchJson(url, {
       headers: { Authorization: bsAuthHeader, Accept: "application/json" },
-    }, { retryServerErrors: true, log });
+    }, { retryServerErrors: true, retryHeadersTimeout: true, retryDelayMs: 500, log });
 
     const data = Array.isArray(json.data) ? json.data : [];
     for (const image of data) {
@@ -73,7 +73,7 @@ async function deleteBookstackGalleryImage({
   await fetchMaybeJson(`${bookstackBase}/api/image-gallery/${id}`, {
     method: "DELETE",
     headers: { Authorization: bsAuthHeader, Accept: "application/json" },
-  }, { allowNotFound: true, retryServerErrors: true, log });
+  }, { allowNotFound: true, retryServerErrors: true, retryHeadersTimeout: true, retryDelayMs: 500, log });
 }
 
 async function deleteBookstackGalleryImagesForPage({

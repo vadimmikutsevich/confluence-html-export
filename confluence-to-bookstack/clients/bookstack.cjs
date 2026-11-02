@@ -125,10 +125,25 @@ function createBookstackClient({ base, tokenId, tokenSecret }, log = () => {}) {
     return page;
   }
 
+  async function listEntities(entity) {
+    const result = [];
+    const count = 100;
+    for (let offset = 0; ; offset += count) {
+      const listing = await fetchJson(`${base}/api/${entity}?count=${count}&offset=${offset}`, {
+        headers: { Authorization: bsAuthHeader, Accept: "application/json" },
+      });
+      const items = Array.isArray(listing.data) ? listing.data : [];
+      result.push(...items);
+      if (items.length < count || offset + items.length >= listing.total) return result;
+    }
+  }
+
   return {
     base,
     resolvePageId,
     createPage,
+    listBooks: () => listEntities("books"),
+    listChapters: () => listEntities("chapters"),
     updatePage: (page) => updateBookstackPage({ ...context, ...page }),
     findOrCreateBook: (desiredName) => findOrCreateBook({ ...context, desiredName }),
     uploadImage: (image) => uploadBookstackGalleryImage({ ...context, ...image }),

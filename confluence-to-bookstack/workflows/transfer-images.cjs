@@ -21,6 +21,7 @@ async function transferImages(
     concurrency = 4,
     maxBytes = 15_000_000,
     log = () => {},
+    onEvent = () => {},
   },
 ) {
   const $ = cheerio.load(html, { decodeEntities: false });
@@ -39,6 +40,8 @@ async function transferImages(
   let fail = 0;
   let skipped = 0;
   let deleted = 0;
+  let processed = 0;
+  onEvent({ type: "images", total: imgs.length, completed: 0 });
 
   if (imgs.length > 0) {
     deleted = await bookstack.deletePageImages(pageId);
@@ -129,10 +132,14 @@ async function transferImages(
             )}`,
           );
         }
+      }).finally(() => {
+        processed += 1;
+        onEvent({ type: "images", total: imgs.length, completed: processed });
       }),
     ),
   );
 
+  onEvent({ type: "images.finished", failed: fail });
   return {
     html: $("body").length ? $("body").html() : $.root().html(),
     stats: { ok, fail, skipped, deleted, unique: bySrc.size },

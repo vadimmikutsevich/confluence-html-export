@@ -1,26 +1,34 @@
 const { preparePage, finalizePage } = require("./prepare-page.cjs");
 const { savePage } = require("../output/files.cjs");
+const { checkpoint } = require("./progress.cjs");
 
-async function exportPages({ config, confluence }) {
+async function exportPages({ config, confluence, roots, signal, onEvent = () => {}, log = console.log }) {
   const { pageId, pageUrl } = config;
   let exported = [];
   const visited = new Set();
-  const queue = [{ id: String(pageId), depth: 0, pageUrlForThis: pageUrl }];
+  const seeds = roots || [{ id: String(pageId), pageUrl }];
+  const rootIds = new Set(seeds.map((root) => root.id));
+  const queue = seeds.map((root) => ({ id: root.id, depth: 0, pageUrlForThis: root.pageUrl }));
+  const discovered = new Set(rootIds);
+  onEvent({ type: "phase", phase: "export", total: null });
 
   while (queue.length) {
+    checkpoint(signal);
     const item = queue.shift();
     if (!item) break;
     const { id, depth, pageUrlForThis } = item;
     if (visited.has(id)) continue;
     visited.add(id);
 
-    console.log(`[info] Export pageId=${id} depth=${depth}`);
+    log(`[info] Export pageId=${id} depth=${depth}`);
+    onEvent({ type: "page.started", id, phase: "export", discovered: discovered.size });
     let res;
     try {
       res = await preparePage({ id, pageUrlForThis }, { config, confluence });
     } catch (e) {
-      if (id === String(pageId)) throw e;
-      console.warn(
+      if (rootIds.has(id)) throw e;
+      onEvent({ type: "page.failed", id, phase: "export" });
+      log(
         `[warn] Skip pageId=${id}: ${String(
           e && e.message ? e.message : e,
         )}`,
@@ -28,10 +36,13 @@ async function exportPages({ config, confluence }) {
       continue;
     }
     exported.push(res);
+    onEvent({ type: "page.loaded", id, title: res.title, loaded: exported.length });
 
-    if (config.recursive && depth < config.maxDepth) {
+    if (config.recursive && depth < Number(config.maxDepth || 1)) {
       for (const linkedId of res.linkedIds) {
         if (!visited.has(linkedId)) {
+          if (discovered.has(linkedId)) continue;
+          discovered.add(linkedId);
           queue.push({
             id: linkedId,
             depth: depth + 1,
@@ -56,7 +67,7 @@ async function exportPages({ config, confluence }) {
   for (const [targetPageId, fragments] of requiredAnchorsByPageId) {
     if (exportedIds.has(targetPageId)) continue;
     for (const fragment of fragments) {
-      console.warn(
+      log(
         `[warn] Anchor target page was not exported: pageId=${targetPageId} fragment=#${fragment}`,
       );
     }
@@ -64,10 +75,12 @@ async function exportPages({ config, confluence }) {
 
   exported = exported.map((res) => {
     const requiredAnchors = requiredAnchorsByPageId.get(res.id) || new Set();
-    const finalized = finalizePage(res, config, requiredAnchors);
+    checkpoint(signal);
+    const finalized = finalizePage(res, config, requiredAnchors, log);
 
     const outPath = savePage(finalized, config);
-    console.log(`[info] Saved HTML: ${outPath}`);
+    log(`[info] Saved HTML: ${outPath}`);
+    onEvent({ type: "page.saved", id: res.id, title: res.title, file: outPath });
     return finalized;
   });
   return exported;

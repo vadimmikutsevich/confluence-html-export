@@ -1,8 +1,10 @@
 const cheerio = require("cheerio");
 const { rewriteConfluenceLinksToBookstack } = require("../html/links.cjs");
 const { transferImages } = require("./transfer-images.cjs");
+const { checkpoint } = require("./progress.cjs");
 
-async function syncPages(exported, { config, confluence, bookstack }, log = console.log) {
+async function syncPages(exported, { config, confluence, bookstack, signal, onEvent = () => {} }, log = console.log) {
+  onEvent({ type: "phase", phase: "sync", total: exported.length });
   const configByName = config.pageMap;
   log(`[sync] Загружен конфиг: ${config.configPath} (${configByName.size} страниц)`);
   const titleById = new Map();
@@ -25,11 +27,14 @@ async function syncPages(exported, { config, confluence, bookstack }, log = cons
   let updated = 0;
   let skipped = 0;
   for (const res of exported) {
+    checkpoint(signal);
+    onEvent({ type: "page.started", phase: "sync", id: res.id, title: res.title });
     log(`[sync] --- Обработка: "${res.title}" (id=${res.id}) ---`);
     const link = configByName.get(res.title);
     if (!link) {
       log(`[skip] Нет в конфиге: "${res.title}"`);
       skipped += 1;
+      onEvent({ type: "page.skipped", id: res.id, title: res.title, reason: "Нет в карте страниц" });
       continue;
     }
     log(`[sync] Есть в конфиге, link=${link}`);
@@ -38,6 +43,7 @@ async function syncPages(exported, { config, confluence, bookstack }, log = cons
     if (!pageIdBs) {
       log(`[warn] Не найден page в BookStack: ${link}`);
       skipped += 1;
+      onEvent({ type: "page.skipped", id: res.id, title: res.title, reason: "Страница BookStack не найдена" });
       continue;
     }
     log(`[sync] BookStack page_id=${pageIdBs}, переписываем ссылки...`);
@@ -83,6 +89,7 @@ async function syncPages(exported, { config, confluence, bookstack }, log = cons
         concurrency: config.concurrency,
         maxBytes: config.maxBytes,
         log,
+        onEvent,
       },
     );
     htmlToSend = galleryImages.html || htmlToSend;
@@ -104,6 +111,7 @@ async function syncPages(exported, { config, confluence, bookstack }, log = cons
     });
     log(`[ok] Обновлена страница: "${res.title}" -> ${link}`);
     updated += 1;
+    onEvent({ type: "page.completed", id: res.id, title: res.title, url: link });
   }
   log(`[sync] Итого: обновлено ${updated}, пропущено ${skipped}`);
 }
