@@ -7,13 +7,13 @@ const { loadBookstackConfig } = require("./page-map.cjs");
 const { validateConfig } = require("./validate-config.cjs");
 
 function loadConfig(options, env = process.env, cwd = process.cwd()) {
-  const { pageId, pageUrl } = parseConfluenceInput(options.page);
+  const { pageId, pageUrl } = options.migrateConfig ? {} : parseConfluenceInput(options.page);
   // Preserve the existing precedence: sync takes priority over dry-run.
-  const mode = options.syncBookstack ? "sync" : options.dryRun ? "export" : "import";
+  const mode = options.migrateConfig ? "migrate" : options.syncBookstack ? "sync" : options.dryRun ? "export" : "import";
   const configPath = path.resolve(cwd, options.config || "bookstack-config.yml");
-  const pageMap = mode === "sync" ? loadBookstackConfig(configPath) : new Map();
-  let bookstackBase = options.bookstackBase || env.BOOKSTACK_BASE || "";
-  if (!bookstackBase && pageMap.size) {
+  const pageMap = ["sync", "migrate"].includes(mode) ? loadBookstackConfig(configPath) : null;
+  let bookstackBase = options.bookstackBase || env.BOOKSTACK_BASE || pageMap?.data.bookstack_base || "";
+  if (!bookstackBase && pageMap?.size) {
     bookstackBase = new URL(pageMap.values().next().value).origin;
   }
   const config = {
@@ -32,7 +32,7 @@ function loadConfig(options, env = process.env, cwd = process.cwd()) {
     confluenceBase: String(
       options.confluenceBase ||
       (pageUrl ? deriveConfluenceBaseFromUrl(pageUrl) : "") ||
-      env.CONFLUENCE_BASE || "",
+      env.CONFLUENCE_BASE || pageMap?.data.confluence_base || "",
     ).replace(/\/+$/, ""),
     confluenceUser: options.confluenceUser || env.CONFLUENCE_USER,
     confluenceToken: options.confluenceToken || env.CONFLUENCE_TOKEN,

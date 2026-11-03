@@ -2,3 +2,10 @@
 node_modules/
 confluence-to-bookstack/web/dist/
 confluence-export/
+bookstack-config.yml.bak
+bookstack-config.yml.lock
+bookstack-config.yml.sync.lock
+bookstack-config.yml.*.tmp
+
+
+.DS_Store

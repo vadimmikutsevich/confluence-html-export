@@ -8,6 +8,7 @@ const {
   preserveReferencedAnchors,
 } = require("./anchors.cjs");
 const { removeConfluencePageToc, stripConfluenceNoise } = require("./cleanup.cjs");
+const { installStableAnchors } = require("./stable-anchors.cjs");
 
 function collectLinkedPageIds(html, confluenceBase) {
   const $ = cheerio.load(html);
@@ -72,6 +73,7 @@ function preparePage(
   return {
     id: String(id),
     title,
+    sourceTitle: page.title,
     preparedHtml,
     preserveIds: [...normalized.preserveIds],
     linkedIds,
@@ -79,13 +81,14 @@ function preparePage(
   };
 }
 
-function finalizePage(prepared, { keepIds, fragment }, requiredAnchors = []) {
+function finalizePage(prepared, { keepIds, fragment, mode }, requiredAnchors = []) {
   const $ = cheerio.load(prepared.preparedHtml, { decodeEntities: false });
   const preserveIds = new Set(prepared.preserveIds || []);
   const unresolved = preserveReferencedAnchors($, {
     fragments: requiredAnchors,
     preserveIds,
   });
+  const anchors = mode === "sync" ? installStableAnchors($, preserveIds) : undefined;
 
   stripConfluenceNoise($, {
     keepIds: Boolean(keepIds),
@@ -102,6 +105,8 @@ function finalizePage(prepared, { keepIds, fragment }, requiredAnchors = []) {
   return {
     id: prepared.id,
     title: prepared.title,
+    sourceTitle: prepared.sourceTitle,
+    anchors,
     linkedIds: prepared.linkedIds,
     html,
     unresolvedAnchors: unresolved,

@@ -1,213 +1,383 @@
+confluence_base: "https://gambchamp.atlassian.net/wiki"
+bookstack_base: "https://book.gambchamp.com"
 books:
-  - name: "Platform FAQ"
-    pages:
-      - name: "Platform FAQ for B2B Operators"
-        link: "https://book.gambchamp.com/books/platform-faq/page/platform-faq-for-b2b-operators"
+  # - name: "Platform FAQ"
+  #   pages:
+  #     - name: "Platform FAQ for B2B Operators"
+  #       link: "https://book.gambchamp.com/books/platform-faq/page/platform-faq-for-b2b-operators"
   - name: "Game Hub"
     pages:
       - name: "Creating and Editing a Game"
         link: "https://book.gambchamp.com/books/game-hub/page/creating-and-editing-a-game"
+        confluence_id: "244221148"
+        bookstack_id: 24
       - name: "Vendor Management. BackOffice"
         link: "https://book.gambchamp.com/books/game-hub/page/vendor-management-backoffice"
+        confluence_id: "285966337"
+        bookstack_id: 94
       - name: "Editing Vendor"
         link: "https://book.gambchamp.com/books/game-hub/page/editing-vendor"
+        confluence_id: "285966458"
+        bookstack_id: 95
       - name: "Creating and Editing Categories"
         link: "https://book.gambchamp.com/books/game-hub/page/creating-and-editing-categories"
+        confluence_id: "323682322"
+        bookstack_id: 108
       - name: "Category Configuration"
         link: "https://book.gambchamp.com/books/game-hub/page/category-configuration"
+        confluence_id: "323682377"
+        bookstack_id: 109
   - name: "Project Settings"
     pages:
       - name: "GEO Management. BackOffice"
         link: "https://book.gambchamp.com/books/project-settings/page/geo-management-backoffice"
+        confluence_id: "244223279"
+        bookstack_id: 32
   - name: "Bonuses and Promo"
     pages:
       - name: "Batch Templates. BackOffice"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/batch-templates-backoffice"
+        confluence_id: "244220487"
+        bookstack_id: 33
       - name: "Creating and Editing an Infocard"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-an-infocard"
+        confluence_id: "244220345"
+        bookstack_id: 34
       - name: "Wagering Contribution Rules. BackOffice"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/wagering-contribution-rules-backoffice"
+        confluence_id: "271646721"
+        bookstack_id: 83
       - name: "Creating and Editing a Wagering Contribution Rule"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-a-wagering-contribution-rule"
+        confluence_id: "271646870"
+        bookstack_id: 84
       - name: "Rules of balance logic. BackOffice"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/rules-of-balance-logic-backoffice"
+        confluence_id: "325550081"
+        bookstack_id: 111
       - name: "Viewing, Creating, and Editing a Bonus Batch Template"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/viewing-creating-and-editing-a-bonus-batch-template"
+        confluence_id: "325353707"
+        bookstack_id: 112
       - name: "Creating and Editing a Balance Logic Rule"
         link: "https://book.gambchamp.com/books/bonuses-and-promo/page/creating-and-editing-a-balance-logic-rule"
+        confluence_id: "325550246"
+        bookstack_id: 113
   - name: "Notification System"
     pages:
       - name: "Email Templates. BackOffice"
         link: "https://book.gambchamp.com/books/notification-system/page/email-templates-backoffice"
+        confluence_id: "244223109"
+        bookstack_id: 35
       - name: "List of JSON variables in email templates"
         link: "https://book.gambchamp.com/books/notification-system/page/list-of-json-variables-in-email-templates"
+        confluence_id: "244223231"
+        bookstack_id: 36
   - name: "Payment Systems"
     pages:
       - name: "Transactions. BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/transactions-backoffice"
+        confluence_id: "244221283"
+        bookstack_id: 40
       - name: "Deposit Wager. BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/deposit-wager-backoffice"
+        confluence_id: "244221563"
+        bookstack_id: 42
       - name: "Fast Deposit. BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/fast-deposit-backoffice"
-      - name: "Creating and editing a deposit wager rule"
+        confluence_id: "244221780"
+        bookstack_id: 43
+      - name: "Creating and Editing a Deposit Wager Rule"
         link: "https://book.gambchamp.com/books/payment-systems/page/creating-and-editing-a-deposit-wager-rule"
-      - name: "Payment Systems (new). BackOffice"
-        link: "https://book.gambchamp.com/books/payment-systems/page/payment-systems-new-backoffice"
+        confluence_id: "244221721"
+        bookstack_id: 45
+      - name: "Payment Systems. BackOffice"
+        link: "https://book.gambchamp.com/books/payment-systems/page/payment-systems-backoffice"
+        confluence_id: "256966657"
+        bookstack_id: 80
       - name: "Editing a Payment System"
         link: "https://book.gambchamp.com/books/payment-systems/page/editing-a-payment-system"
+        confluence_id: "256966913"
+        bookstack_id: 81
       - name: "Withdrawal Limits. BackOffice"
         link: "https://book.gambchamp.com/books/payment-systems/page/withdrawal-limits-backoffice"
+        confluence_id: "273252353"
+        bookstack_id: 86
       - name: "Creating and Editing a Withdrawal Limit"
         link: "https://book.gambchamp.com/books/payment-systems/page/creating-and-editing-a-withdrawal-limit"
+        confluence_id: "273252525"
+        bookstack_id: 87
       - name: "Transaction View"
         link: "https://book.gambchamp.com/books/payment-systems/page/transaction-view"
+        confluence_id: "303726598"
+        bookstack_id: 105
   - name: "Smartico Integration"
     pages:
       - name: "Configuring Webhooks in the Smartico BackOffice"
         link: "https://book.gambchamp.com/books/smartico-integration/page/configuring-webhooks-in-the-smartico-backoffice"
+        confluence_id: "244224049"
+        bookstack_id: 47
   - name: "Content Management"
     pages:
-      - name: "Help Center Settings. BackOffice"
-        link: "https://book.gambchamp.com/books/content-management/page/help-center-settings-backoffice"
+      - name: "Configuring Help Center Pages. BackOffice"
+        link: "https://book.gambchamp.com/books/content-management/page/configuring-help-center-pages-backoffice"
+        confluence_id: "244222519"
+        bookstack_id: 48
       - name: "Payment Stickers. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/payment-stickers-backoffice"
+        confluence_id: "256573449"
+        bookstack_id: 71
       - name: "Onboarding. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/onboarding-backoffice"
-      - name: "Creating and Editing Onboarding Flow"
-        link: "https://book.gambchamp.com/books/content-management/page/creating-and-editing-onboarding-flow"
+        confluence_id: "297009153"
+        bookstack_id: 101
+      - name: "Creating and Editing an Onboarding Flow"
+        link: "https://book.gambchamp.com/books/content-management/page/creating-and-editing-an-onboarding-flow"
+        confluence_id: "297009307"
+        bookstack_id: 102
       - name: "Config Constructor. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/config-constructor-backoffice"
+        confluence_id: "344293378"
+        bookstack_id: 116
       - name: "Configurations. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/configurations-backoffice"
+        confluence_id: "344293414"
+        bookstack_id: 117
       - name: "Creating and Editing a Configuration"
         link: "https://book.gambchamp.com/books/content-management/page/creating-and-editing-a-configuration"
+        confluence_id: "344293605"
+        bookstack_id: 118
       - name: "Configuring a Configuration"
         link: "https://book.gambchamp.com/books/content-management/page/configuring-a-configuration"
+        confluence_id: "344293673"
+        bookstack_id: 119
       - name: "Payment Method Display Setups. BackOffice"
         link: "https://book.gambchamp.com/books/content-management/page/payment-method-display-setups-backoffice"
+        confluence_id: "370769923"
+        bookstack_id: 122
       - name: "Creating and Editing Payment Method Display Setups"
         link: "https://book.gambchamp.com/books/content-management/page/creating-and-editing-payment-method-display-setups"
+        confluence_id: "370770028"
+        bookstack_id: 123
   - name: "Analytics"
     pages:
       - name: "PowerBI Reports. BackOffice"
         link: "https://book.gambchamp.com/books/analytics/page/powerbi-reports-backoffice"
+        confluence_id: "244220186"
+        bookstack_id: 50
   - name: "Amplitude Integration"
     pages:
       - name: "Events for Amplitude"
         link: "https://book.gambchamp.com/books/amplitude-integration/page/events-for-amplitude"
+        confluence_id: "244187671"
+        bookstack_id: 51
   - name: "Platform Settings"
     pages:
       - name: "Interface Language. BackOffice"
         link: "https://book.gambchamp.com/books/platform-settings/page/interface-language-backoffice"
-      - name: "Admin Management. BackOffice"
-        link: "https://book.gambchamp.com/books/platform-settings/page/admin-management-backoffice"
+        confluence_id: "244223695"
+        bookstack_id: 57
+      - name: "User Management (Administrators). BackOffice"
+        link: "https://book.gambchamp.com/books/platform-settings/page/user-management-administrators-backoffice"
+        confluence_id: "244223743"
+        bookstack_id: 58
       - name: "Creating and Editing an Administrator"
         link: "https://book.gambchamp.com/books/platform-settings/page/creating-and-editing-an-administrator"
+        confluence_id: "244223832"
+        bookstack_id: 74
       - name: "Administrator Rights"
         link: "https://book.gambchamp.com/books/platform-settings/page/administrator-rights"
+        confluence_id: "244223886"
+        bookstack_id: 75
   - name: "Intercom Integration"
     pages:
       - name: "Data in Intercom"
         link: "https://book.gambchamp.com/books/intercom-integration/page/data-in-intercom"
+        confluence_id: "247595009"
+        bookstack_id: 59
   - name: "Platform Mechanics"
     pages:
       - name: "Balances"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/balances"
+        confluence_id: "244253600"
+        bookstack_id: 62
       - name: "Jackpots"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/jackpots"
+        confluence_id: "244252689"
+        bookstack_id: 63
       - name: "Deposit Wager"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/deposit-wager"
+        confluence_id: "244253634"
+        bookstack_id: 64
       - name: "User's Language"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/users-language"
+        confluence_id: "244253836"
+        bookstack_id: 65
       - name: "Notification Triggers"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/notification-triggers"
+        confluence_id: "244253690"
+        bookstack_id: 66
       - name: "Withdrawal Limits"
         link: "https://book.gambchamp.com/books/platform-mechanics/page/withdrawal-limits"
+        confluence_id: "273219585"
+        bookstack_id: 85
   - name: "BackOffice"
     pages:
       - name: "BackOffice"
         link: "https://book.gambchamp.com/books/backoffice/page/backoffice"
+        confluence_id: "244219905"
+        bookstack_id: 67
   - name: "Player Interface"
     pages:
       - name: "Player Profile. Profile Data"
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-profile-data"
+        confluence_id: "244187285"
+        bookstack_id: 69
       - name: "Player Profile. Security"
         link: "https://book.gambchamp.com/books/player-interface/page/player-profile-security"
+        confluence_id: "290062519"
+        bookstack_id: 96
       - name: "Registration Onboarding"
         link: "https://book.gambchamp.com/books/player-interface/page/registration-onboarding"
+        confluence_id: "296812734"
+        bookstack_id: 99
       - name: "Wallet"
         link: "https://book.gambchamp.com/books/player-interface/page/wallet"
+        confluence_id: "290029684"
+        bookstack_id: 100
       - name: "Reward Hub"
         link: "https://book.gambchamp.com/books/player-interface/page/reward-hub"
+        confluence_id: "305790977"
+        bookstack_id: 104
       - name: "Campaign Pop-up"
         link: "https://book.gambchamp.com/books/player-interface/page/campaign-pop-up"
+        confluence_id: "324894722"
+        bookstack_id: 110
       - name: "Loyalty Program Page"
         link: "https://book.gambchamp.com/books/player-interface/page/loyalty-program-page"
+        confluence_id: "344326145"
+        bookstack_id: 115
       - name: "Geo-restrictions. BackOffice"
         link: "https://book.gambchamp.com/books/player-interface/page/geo-restrictions-backoffice"
+        confluence_id: "346816514"
+        bookstack_id: 120
       - name: "Sidebar Menu"
         link: "https://book.gambchamp.com/books/player-interface/page/sidebar-menu"
+        confluence_id: "346750990"
+        bookstack_id: 121
   - name: "PostHog Integration"
     pages:
       - name: "Data in PostHog"
         link: "https://book.gambchamp.com/books/posthog-integration/page/data-in-posthog"
+        confluence_id: "244187711"
+        bookstack_id: 73
       - name: "Analysis of User Search Queries"
         link: "https://book.gambchamp.com/books/posthog-integration/page/analysis-of-user-search-queries"
+        confluence_id: "244253707"
+        bookstack_id: 72
   - name: "Game Aggregator Integration"
     pages:
       - name: "Jackpot Campaign List"
         link: "https://book.gambchamp.com/books/game-aggregator-integration/page/jackpot-campaign-list"
-      - name: "Creating and editing a jackpot campaign"
+        confluence_id: "244253101"
+        bookstack_id: 77
+      - name: "Creating and Editing a Jackpot Campaign"
         link: "https://book.gambchamp.com/books/game-aggregator-integration/page/creating-and-editing-a-jackpot-campaign"
+        confluence_id: "244253325"
+        bookstack_id: 76
   - name: "Users"
     pages:
       - name: "Campaign Details. Conditions"
         link: "https://book.gambchamp.com/books/users/page/campaign-details-conditions"
-      - name: "Batch Details. Bonus types"
+        confluence_id: "260702325"
+        bookstack_id: 78
+      - name: "Batch Details. Bonus Types"
         link: "https://book.gambchamp.com/books/users/page/batch-details-bonus-types"
+        confluence_id: "260702391"
+        bookstack_id: 79
       - name: "Player Limits"
         link: "https://book.gambchamp.com/books/users/page/player-limits"
+        confluence_id: "290390017"
+        bookstack_id: 97
       - name: "Account Freeze"
         link: "https://book.gambchamp.com/books/users/page/account-freeze"
+        confluence_id: "290357289"
+        bookstack_id: 98
   - name: "Tags & Segments"
     pages:
       - name: "Configuring User Segmentation Tag Filters"
         link: "https://book.gambchamp.com/books/tags-segments/page/configuring-user-segmentation-tag-filters"
+        confluence_id: "302023586"
+        bookstack_id: 106
       - name: "Configuring Game Segmentation Tag Filters"
         link: "https://book.gambchamp.com/books/tags-segments/page/configuring-game-segmentation-tag-filters"
 
-  # Release Notes
+        # Release Notes
+        confluence_id: "327876609"
+        bookstack_id: 114
   - name: "Release Notes"
     pages:
       - name: "Release Notes v.27 – March 30, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v27-march-30-2026"
+        confluence_id: "247234875"
+        bookstack_id: 88
       - name: "Release Notes v.27.1 – April 1, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v271-april-1-2026"
+        confluence_id: "254443522"
+        bookstack_id: 89
       - name: "Release Notes v.28 – April 15, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v28-april-15-2026"
+        confluence_id: "260636694"
+        bookstack_id: 90
       - name: "Release Notes v.29 – April 22, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v29-april-22-2026"
+        confluence_id: "271613953"
+        bookstack_id: 91
       - name: "Release Notes v.30 – May 6, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v30-may-6-2026"
+        confluence_id: "284622850"
+        bookstack_id: 92
       - name: "Release Notes v.31 – May 19, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v31-may-19-2026"
+        confluence_id: "287703049"
+        bookstack_id: 93
       - name: "Release Notes v.32 – June 3, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v32-june-3-2026"
+        confluence_id: "299303387"
+        bookstack_id: 103
       - name: "Release Notes v.33 – June 20, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v33-june-20-2026"
+        confluence_id: "305791809"
+        bookstack_id: 107
       - name: "Release Notes v.34 – July 6, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v34-july-6-2026"
+        confluence_id: "319914157"
+        bookstack_id: 124
       - name: "Release Notes v.35 – July 22, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v35-july-22-2026"
+        confluence_id: "331874306"
+        bookstack_id: 125
       - name: "Release Notes v.36 – July 30, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v36-july-30-2026"
+        confluence_id: "338231519"
+        bookstack_id: 126
       - name: "Release Notes v.37 – August 3, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v37-august-3-2026"
+        confluence_id: "340983809"
+        bookstack_id: 127
       - name: "Release Notes v.38 – August 18, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v38-august-18-2026"
+        confluence_id: "344326181"
+        bookstack_id: 128
       - name: "Release Notes v.39 – September 2, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v39-september-2-2026"
+        confluence_id: "352092162"
+        bookstack_id: 129
       - name: "Release Notes v.40 – September 16, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v40-september-16-2026"
+        confluence_id: "362676227"
+        bookstack_id: 130
       - name: "Release Notes v.41 – September 30, 2026"
         link: "https://book.gambchamp.com/books/release-notes/page/release-notes-v41-september-30-2026"
+        confluence_id: "369885253"
+        bookstack_id: 131

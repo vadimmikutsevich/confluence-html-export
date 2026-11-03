@@ -2,26 +2,32 @@ const cheerio = require("cheerio");
 const { rewriteConfluenceLinksToBookstack } = require("../html/links.cjs");
 const { transferImages } = require("./transfer-images.cjs");
 const { checkpoint } = require("./progress.cjs");
+const { prepareSyncPlan } = require("./page-registry.cjs");
+const { savedAnchorMap } = require("../html/stable-anchors.cjs");
 
 async function syncPages(exported, { config, confluence, bookstack, signal, onEvent = () => {} }, log = console.log) {
+  const release = config.pageMap.acquireRunLock();
+  try {
+    return await runSync(exported, { config, confluence, bookstack, signal, onEvent }, log);
+  } finally { release(); }
+}
+
+async function runSync(exported, { config, confluence, bookstack, signal, onEvent }, log) {
   onEvent({ type: "phase", phase: "sync", total: exported.length });
-  const configByName = config.pageMap;
-  log(`[sync] Загружен конфиг: ${config.configPath} (${configByName.size} страниц)`);
-  const titleById = new Map();
-  for (const r of exported) titleById.set(r.id, r.title);
-  const linkedIdsToResolve = new Set();
-  for (const r of exported) {
-    for (const linkedId of r.linkedIds || []) {
-      if (!titleById.has(linkedId)) linkedIdsToResolve.add(linkedId);
-    }
+  const plan = await prepareSyncPlan(exported, { config, confluence, bookstack, signal }, log);
+  const { registry, targets } = plan;
+  const exportedById = new Map(exported.map(page => [String(page.id), page]));
+  for (const [id, target] of targets) {
+    target.anchors = exportedById.get(id)?.anchors || savedAnchorMap(target.page);
   }
-  if (linkedIdsToResolve.size > 0) {
-    log(`[sync] Resolve linked page titles: ${linkedIdsToResolve.size}`);
-    for (const linkedId of linkedIdsToResolve) {
-      const linkedTitle = await confluence.getTitleById(linkedId).catch(() => "");
-      if (linkedTitle) titleById.set(linkedId, linkedTitle);
-    }
+  if (config.dryRun) {
+    log(`[dry-run] План проверен: ${targets.size} соответствий; BookStack и конфиг не изменены`);
+    return plan;
   }
+  // Persist verified identities before the first remote write, so a failed run
+  // can resume even when some titles/slugs have already changed.
+  checkpoint(signal);
+  registry.save();
   log(`[sync] Экспортировано страниц: ${exported.length}`);
 
   let updated = 0;
@@ -30,30 +36,24 @@ async function syncPages(exported, { config, confluence, bookstack, signal, onEv
     checkpoint(signal);
     onEvent({ type: "page.started", phase: "sync", id: res.id, title: res.title });
     log(`[sync] --- Обработка: "${res.title}" (id=${res.id}) ---`);
-    const link = configByName.get(res.title);
-    if (!link) {
+    const target = targets.get(String(res.id));
+    if (!target) {
       log(`[skip] Нет в конфиге: "${res.title}"`);
       skipped += 1;
       onEvent({ type: "page.skipped", id: res.id, title: res.title, reason: "Нет в карте страниц" });
       continue;
     }
-    log(`[sync] Есть в конфиге, link=${link}`);
-
-    const pageIdBs = await bookstack.resolvePageId(link);
-    if (!pageIdBs) {
-      log(`[warn] Не найден page в BookStack: ${link}`);
-      skipped += 1;
-      onEvent({ type: "page.skipped", id: res.id, title: res.title, reason: "Страница BookStack не найдена" });
-      continue;
-    }
+    const pageIdBs = target.page.id;
     log(`[sync] BookStack page_id=${pageIdBs}, переписываем ссылки...`);
 
     const $ = cheerio.load(res.html, { decodeEntities: false });
     const linkRewriteStats = rewriteConfluenceLinksToBookstack($, {
-      titleById,
-      configByName,
+      targets,
       confluenceBase: confluence.base,
     });
+    for (const missing of linkRewriteStats.missingAnchors) {
+      log(`[warn] Блок #${missing.fragment} на странице ${missing.linkedId} не подтверждён; ссылка ведёт на начало страницы`);
+    }
     if (linkRewriteStats.rewritten || linkRewriteStats.disabled) {
       log(
         `[sync] Links: rewritten=${linkRewriteStats.rewritten}, disabled=${linkRewriteStats.disabled}`,
@@ -103,15 +103,22 @@ async function syncPages(exported, { config, confluence, bookstack, signal, onEv
     }
     log(`[sync] Отправка HTML (${htmlToSend.length} символов)...`);
 
-    await bookstack.updatePage({
+    const updatedPage = await bookstack.updatePage({
       pageId: pageIdBs,
       html: htmlToSend,
       name: res.title,
       log,
     });
-    log(`[ok] Обновлена страница: "${res.title}" -> ${link}`);
+    const saved = updatedPage.raw_html != null || updatedPage.html != null ? updatedPage : await bookstack.getPage(pageIdBs);
+    const actualAnchors = savedAnchorMap(saved);
+    for (const [fragment, alias] of res.anchors || []) {
+      if (actualAnchors.get(fragment) !== alias) throw new Error(`BookStack изменил стабильный якорь #${fragment}; проверьте обработку HTML на сервере`);
+    }
+    target.entry.link = await bookstack.canonicalUrl(updatedPage);
+    registry.save();
+    log(`[ok] Обновлена страница: "${res.title}" -> ${target.entry.link}`);
     updated += 1;
-    onEvent({ type: "page.completed", id: res.id, title: res.title, url: link });
+    onEvent({ type: "page.completed", id: res.id, title: res.title, url: target.url });
   }
   log(`[sync] Итого: обновлено ${updated}, пропущено ${skipped}`);
 }

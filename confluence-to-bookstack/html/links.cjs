@@ -1,4 +1,5 @@
 const { absolutizeMaybe, extractConfluencePageIdFromHref } = require("../shared/urls.cjs");
+const { decodeFragment } = require("./stable-anchors.cjs");
 
 function looksLikeUrlText(text) {
   const t = String(text || "").trim();
@@ -82,10 +83,10 @@ function humanizeConfluenceLinkText(
 
 function rewriteConfluenceLinksToBookstack(
   $,
-  { titleById, configByName, confluenceBase },
+  { targets, confluenceBase },
 ) {
   const base = confluenceBase;
-  const stats = { rewritten: 0, disabled: 0, unresolved: [] };
+  const stats = { rewritten: 0, disabled: 0, unresolved: [], missingAnchors: [] };
 
   const disableLink = ($a, href, { linkedId = "", title = "", reason = "" }) => {
     stats.disabled += 1;
@@ -118,20 +119,11 @@ function rewriteConfluenceLinksToBookstack(
       return;
     }
 
-    const title = titleById.get(linkedId);
-    if (!title) {
-      if (isConfluenceBaseHref(href, base)) {
-        disableLink($a, href, { linkedId, reason: "title-not-resolved" });
-      }
-      return;
-    }
-
-    const link = configByName.get(title);
-    if (!link) {
+    const target = targets.get(linkedId);
+    if (!target) {
       if (isConfluenceBaseHref(href, base)) {
         disableLink($a, href, {
           linkedId,
-          title,
           reason: "missing-bookstack-config-match",
         });
       }
@@ -141,10 +133,12 @@ function rewriteConfluenceLinksToBookstack(
     try {
       const abs = absolutizeMaybe(href, base);
       const u = new URL(abs);
-      const hash = u.hash || "";
-      $a.attr("href", link + hash);
+      const fragment = decodeFragment(u.hash.slice(1));
+      const anchor = fragment && target.anchors?.get(fragment);
+      if (fragment && !anchor) stats.missingAnchors.push({ linkedId, fragment });
+      $a.attr("href", target.url + (anchor ? `#${encodeURIComponent(anchor)}` : ""));
     } catch {
-      $a.attr("href", link);
+      $a.attr("href", target.url);
     }
     stats.rewritten += 1;
   });

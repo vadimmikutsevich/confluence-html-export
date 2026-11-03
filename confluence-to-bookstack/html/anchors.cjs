@@ -51,7 +51,7 @@ function normalizeAnchorsAndLinks(
     if (!hrefAbs) return false;
     try {
       const u = new URL(hrefAbs);
-      return new RegExp(`/pages/${pageId}(?:/|$)`).test(u.pathname);
+      return new RegExp(`/pages/${pageId}(?:/|$)`, "i").test(u.pathname);
     } catch {
       return false;
     }

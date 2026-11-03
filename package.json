@@ -5,11 +5,13 @@
   "main": "script.js",
   "scripts": {
     "c2b": "node confluence-to-bookstack/cli.cjs",
+    "config:check": "npm run c2b -- --migrate-config --dry-run",
+    "config:migrate": "npm run c2b -- --migrate-config",
     "web": "npm run web:build && node confluence-to-bookstack/web/server/index.cjs",
     "web:server": "node confluence-to-bookstack/web/server/index.cjs",
     "web:dev": "vite --config confluence-to-bookstack/web/vite.config.mjs",
     "web:build": "vite build --config confluence-to-bookstack/web/vite.config.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test confluence-to-bookstack/tests/*.test.cjs"
   },
   "keywords": [],
   "author": "",

@@ -30,7 +30,7 @@ function bookstackSettings(env) {
     try {
       const pageMap = loadBookstackConfig(path.join(projectRoot, "bookstack-config.yml"));
       const link = pageMap.values().next().value;
-      if (link) base = new URL(link).origin;
+      base = pageMap.data.bookstack_base || (link ? new URL(link).origin : "");
     } catch { /* Report missing settings when checking a task. */ }
   }
   return { base: base.replace(/\/+$/, ""), tokenId: env.BOOKSTACK_TOKEN_ID, tokenSecret: env.BOOKSTACK_TOKEN_SECRET };

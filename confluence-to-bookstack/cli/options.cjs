@@ -7,7 +7,8 @@ function parseOptions(argv = process.argv) {
     .description(
       "CLI: выгрузка страниц Confluence в HTML (и импорт в BookStack)",
     )
-    .requiredOption("--page <urlOrId>", "URL страницы Confluence или pageId")
+    .option("--page <urlOrId>", "URL страницы Confluence или pageId (обязательно, кроме --migrate-config)")
+    .option("--migrate-config", "Проверить карту страниц и заполнить постоянные ID; BookStack не изменяется")
     .option(
       "--confluence-base <url>",
       "База Confluence, напр. https://site.atlassian.net/wiki",
@@ -47,7 +48,7 @@ function parseOptions(argv = process.argv) {
     .option("--title <name>", "Переопределить заголовок страницы в BookStack")
     .option(
       "--dry-run",
-      "Не создавать страницу в BookStack, только вывести/сохранить HTML",
+      "Без записи в BookStack и конфиг; с --sync-bookstack проверить план синхронизации",
     )
     .option(
       "--out <file>",
@@ -87,7 +88,7 @@ function parseOptions(argv = process.argv) {
     )
     .option(
       "--config <path>",
-      "Путь к bookstack-config.yml (карта page name -> link для синхронизации)",
+      "Путь к bookstack-config.yml (карта Confluence ID → BookStack ID)",
     )
     .option(
       "--sync-bookstack",
@@ -95,7 +96,10 @@ function parseOptions(argv = process.argv) {
     )
     .parse(argv);
 
-  return program.opts();
+  const options = program.opts();
+  if (!options.page && !options.migrateConfig) program.error("Нужно указать --page или --migrate-config");
+  if (options.migrateConfig && options.syncBookstack) program.error("--migrate-config и --sync-bookstack нельзя совмещать");
+  return options;
 }
 
 module.exports = { parseOptions };

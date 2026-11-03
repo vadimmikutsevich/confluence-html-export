@@ -6,10 +6,12 @@ const { syncPages } = require("../../workflows/sync.cjs");
 const { importPage } = require("../../workflows/import-page.cjs");
 const { checkpoint } = require("../../workflows/progress.cjs");
 const { prepareInput } = require("./config.cjs");
+const { prepareSyncPlan } = require("../../workflows/page-registry.cjs");
 
 class JobManager {
-  constructor(env) {
+  constructor(env, prepareContext = prepareInput) {
     this.env = env;
+    this.prepareContext = prepareContext;
     this.checks = new Map();
     this.jobs = new Map();
     this.events = new EventEmitter();
@@ -35,17 +37,18 @@ class JobManager {
     try {
       for (const [id, value] of this.checks) if (Date.now() > value.expires) this.checks.delete(id);
       if (this.checks.size >= 20) this.checks.delete(this.checks.keys().next().value);
-      const context = prepareInput(input, this.env);
+      const context = this.prepareContext(input, this.env);
       const documents = [];
       const warnings = [];
       for (const root of context.roots) {
         const page = await context.confluence.getFullById(root.id);
         if (!page.html?.trim()) throw new Error(`Документ ${root.id} вернул пустой HTML`);
         documents.push({ id: root.id, title: page.title });
-        if (input.mode === "sync") {
-          const link = context.config.pageMap.get(page.title);
-          if (!link) warnings.push(`«${page.title}»: нет соответствия в bookstack-config.yml, страница будет пропущена`);
-          else if (!await context.bookstack.resolvePageId(link)) warnings.push(`«${page.title}»: целевая страница BookStack не найдена`);
+      }
+      if (input.mode === "sync") {
+        const plan = await prepareSyncPlan(documents, context, message => warnings.push(message));
+        for (const page of documents) if (!plan.targets.has(String(page.id))) {
+          warnings.push(`«${page.title}»: нет соответствия в bookstack-config.yml, страница будет пропущена`);
         }
       }
       if (input.mode === "import") {
@@ -73,7 +76,7 @@ class JobManager {
     if (this.active || this.checking) throw Object.assign(new Error("Уже выполняется задача"), { statusCode: 409 });
     const checked = this.checks.get(checkId);
     if (!checked || Date.now() > checked.expires) throw new Error("Проверка устарела. Проверьте параметры ещё раз.");
-    const context = prepareInput(checked.input, this.env);
+    const context = this.prepareContext(checked.input, this.env);
     this.checks.delete(checkId);
     const id = randomUUID();
     const job = {
