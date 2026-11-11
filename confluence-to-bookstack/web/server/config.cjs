@@ -1,6 +1,7 @@
 const path = require("node:path");
+const fs = require("node:fs");
+const yaml = require("js-yaml");
 const { loadConfig } = require("../../config/load-config.cjs");
-const { loadBookstackConfig } = require("../../config/page-map.cjs");
 const { parseConfluenceInput, deriveConfluenceBaseFromUrl } = require("../../shared/urls.cjs");
 const { createConfluenceClient } = require("../../clients/confluence.cjs");
 const { createBookstackClient } = require("../../clients/bookstack.cjs");
@@ -24,13 +25,19 @@ const inputSchema = {
   },
 };
 
-function bookstackSettings(env) {
+function bookstackSettings(env, configPath = path.join(projectRoot, "bookstack-config.yml")) {
   let base = env.BOOKSTACK_BASE || "";
   if (!base) {
     try {
-      const pageMap = loadBookstackConfig(path.join(projectRoot, "bookstack-config.yml"));
-      const link = pageMap.values().next().value;
-      base = pageMap.data.bookstack_base || (link ? new URL(link).origin : "");
+      // Connection settings must not depend on page-map validation. Invalid IDs
+      // are reported by loadConfig during sync checks, not as missing tokens.
+      const data = yaml.load(fs.readFileSync(configPath, "utf8"));
+      base = data?.bookstack_base || "";
+      if (!base && Array.isArray(data?.books)) {
+        const link = data.books.flatMap(book => Array.isArray(book?.pages) ? book.pages : [])
+          .find(page => page?.link)?.link;
+        if (link) base = new URL(link).origin;
+      }
     } catch { /* Report missing settings when checking a task. */ }
   }
   return { base: base.replace(/\/+$/, ""), tokenId: env.BOOKSTACK_TOKEN_ID, tokenSecret: env.BOOKSTACK_TOKEN_SECRET };
